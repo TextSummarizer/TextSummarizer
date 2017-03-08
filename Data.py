@@ -1,3 +1,6 @@
+from nltk.corpus import stopwords
+
+
 class Data:
   def __init__(self):
     pass
@@ -5,28 +8,34 @@ class Data:
   def stemming(self):
     pass
 
-  def delete_stopwords(self, infile, data):
-    inf = open(infile, "r")
-    lines = inf.readline()
-    line = lines.split(", ")
-    for word in line:
-      word = " " + word + " "
-      for sentence in data:
-        if word in sentence:
-          sentence.replace(word, '')
-    inf.close()
-    return data
+  def remove_punctuation(self, data):
+    pass
+
+  def delete_stopwords(self, data):
+    to_return = []
+    stop = set(stopwords.words('english'))
+    for sentence in data:
+      stopped = ""
+      sentence = sentence.split(" ")
+      temp = [i for i in sentence if i not in stop]
+      for word in temp:
+        stopped += word
+        stopped += " "
+      to_return.append(stopped)
+    return to_return
 
   def get_data(self, data):
     to_return = []
     f = open(data, "r")
     i = 0
-    while i < len(data):
+    while i < len(
+      data):  # scandisce fino alla fine dei giorni. per risolvere non ho salvato nell'array da ritornare le frasi(stringhe) vuote
       line = f.readline()
-      line.lower()  # non funziona, cribbio
-      sentences = line.split(".")
+      sentences = line.lower().split(". ")
       for sentence in sentences:
         if sentence != "\n" and sentence != '':
+          if sentence.startswith(" "):
+            sentence.replace(" ", "")
           to_return.append(sentence)
       i += 1
     f.close()
@@ -54,4 +63,8 @@ class Data:
 d = Data()
 data = d.get_data("testo.txt")
 d.format_data(data)
-# stopped = d.deleteStopwords("stop-word-list.csv", data)
+stopped = d.delete_stopwords(data)
+print ""
+print "without stopwords"
+print ""
+d.format_data(stopped)
