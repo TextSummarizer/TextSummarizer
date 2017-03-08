@@ -5,7 +5,7 @@ class Data:
   def stemming(self):
     pass
 
-  def deleteStopwords(self, infile, data):
+  def delete_stopwords(self, infile, data):
     inf = open(infile, "r")
     lines = inf.readline()
     line = lines.split(", ")
@@ -17,7 +17,7 @@ class Data:
     inf.close()
     return data
 
-  def getData(self, data):
+  def get_data(self, data):
     to_return = []
     f = open(data, "r")
     i = 0
@@ -37,15 +37,15 @@ class Data:
       f.write(string)
     f.close()
 
-  def print_and_format(self, data):  # puo diventare solo di format
+  def format_data(self, data):
     for row in data:
-      row.replace("\n",'')
+      row.replace("\n", '')
       line = ""
       for i in row:
         line += i
-      print line
+      return line
 
-  def writeon(self, data, out):
+  def write_on(self, data, out):
     out = open(out, "w")
     for row in data:
       line = ""
@@ -55,7 +55,7 @@ class Data:
 
 
 d = Data()
-data = d.getData("doc.txt")
-d.print_and_format(data)
+data = d.get_data("doc.txt")
+print d.format_data(data)
 # stopped = d.deleteStopwords("stop-word-list.csv", data)
 # d.print_and_format(stopped)
