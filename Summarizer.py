@@ -8,6 +8,7 @@ class Summarizer:
         self.stemming = stemming
         self.remove_stopwords = remove_stopwords
         self.tfidf_threshold = tfidf_threshold
+        self.sentence_retriever = []
         self.coverage = coverage
         self.redundancy_threshold = redundancy_threshold
 
@@ -40,5 +41,39 @@ class Summarizer:
     def _phrase_vectorizer(self):
         pass
 
-    def _phrase_selection(self):
-        pass
+    def _phrase_selection(self, centroid, sentences_dict):
+        from sklearn.metrics.pairwise import cosine_similarity
+
+        # Generate ranked record (sentence_id - vector - sim_with_centroid)
+        centroid = centroid.reshape(1, -1)  # avoid warning
+        record = []
+        for sentence_id in sentences_dict:
+            vector = sentences_dict[sentence_id].reshape(1, -1)
+            similarity = cosine_similarity(centroid, vector)
+            record.append((sentence_id, vector, similarity[0, 0]))
+
+        rank = list(reversed(sorted(record, key=lambda tup: tup[2])))
+
+        # Get first k sentences until the limit (words%) is reached
+        word_count = sum([len(sentence.split(" ")) for sentence in self.sentence_retriever])
+        word_limit = word_count * self.coverage
+
+        result_list = []
+        summary_word_num = 0
+        stop = False
+        i = 0
+        while not stop:
+            sent_word_num = len(self.sentence_retriever[0].split(" "))
+            if (summary_word_num + sent_word_num) <= word_limit:
+                summary_word_num += sent_word_num
+                result_list.append(self.sentence_retriever[rank[rank.keys()[i]]])
+                i += 1
+            else:
+                stop = True
+
+        # Format output
+        result = ""
+        for sentence in result_list:
+            result += sentence
+
+        return result
