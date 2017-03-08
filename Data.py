@@ -1,4 +1,5 @@
 from nltk.corpus import stopwords
+from nltk.tokenize import RegexpTokenizer
 
 
 class Data:
@@ -9,7 +10,16 @@ class Data:
     pass
 
   def remove_punctuation(self, data):
-    pass
+    to_return = []
+    tokenizer = RegexpTokenizer(r'\w+')
+    for sentence in data:
+      temp = ""
+      tokenized = tokenizer.tokenize(sentence)
+      for word in tokenized:
+        temp += word
+        temp += " "
+      to_return.append(temp)
+    return to_return
 
   def delete_stopwords(self, data):
     to_return = []
@@ -47,7 +57,7 @@ class Data:
       f.write(string)
     f.close()
 
-  def format_data(self, data):
+  def print_data(self, data):
     for row in data:
       print row
 
@@ -62,9 +72,8 @@ class Data:
 
 d = Data()
 data = d.get_data("testo.txt")
-d.format_data(data)
+# d.print_data(data)
 stopped = d.delete_stopwords(data)
-print ""
-print "without stopwords"
-print ""
-d.format_data(stopped)
+# d.print_data(stopped)
+no_points = d.remove_punctuation(data)
+# d.print_data(no_points)
