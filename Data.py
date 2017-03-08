@@ -26,7 +26,8 @@ class Data:
       line.lower()  # non funziona, cribbio
       sentences = line.split(".")
       for sentence in sentences:
-        to_return.append(sentence)
+        if sentence != "\n" and sentence != '':
+          to_return.append(sentence)
       i += 1
     f.close()
     return to_return
@@ -39,11 +40,7 @@ class Data:
 
   def format_data(self, data):
     for row in data:
-      row.replace("\n", '')
-      line = ""
-      for i in row:
-        line += i
-      return line
+      print row
 
   def write_on(self, data, out):
     out = open(out, "w")
@@ -55,7 +52,6 @@ class Data:
 
 
 d = Data()
-data = d.get_data("doc.txt")
-print d.format_data(data)
+data = d.get_data("testo.txt")
+d.format_data(data)
 # stopped = d.deleteStopwords("stop-word-list.csv", data)
-# d.print_and_format(stopped)
