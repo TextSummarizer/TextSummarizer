@@ -12,7 +12,7 @@ class Data:
         stemmer = Stemmer.Stemmer('english')
         for sentence in data:
             string = ""
-            temp = sentence.split(" ")
+            temp = sentence.lower().split(" ")
             for word in temp:
                 new_word = stemmer.stemWord(word)
                 string += new_word
@@ -25,7 +25,7 @@ class Data:
         tokenizer = RegexpTokenizer(r'\w+')
         for sentence in data:
             temp = ""
-            tokenized = tokenizer.tokenize(sentence)
+            tokenized = tokenizer.tokenize(sentence.lower())
             for word in tokenized:
                 temp += word
                 temp += " "
@@ -37,7 +37,7 @@ class Data:
         stop = set(stopwords.words('english'))
         for sentence in data:
             stopped = ""
-            sentence = sentence.split(" ")
+            sentence = sentence.lower().split(" ")
             temp = [i for i in sentence if i not in stop]
             for word in temp:
                 stopped += word
@@ -52,7 +52,7 @@ class Data:
         while i < len(
                 data):  # scandisce fino alla fine dei giorni. per risolvere non ho salvato nell'array da ritornare le frasi(stringhe) vuote
             line = f.readline()
-            sentences = line.lower().split(". ")
+            sentences = line.split(". ")
             for sentence in sentences:
                 if sentence != "\n" and sentence != '':
                     if sentence.startswith(" "):
@@ -60,6 +60,13 @@ class Data:
                     to_return.append(sentence)
             i += 1
         f.close()
+        return to_return
+
+    def add_points(self, data):
+        to_return = []
+        for sentence in data:
+            sentence += "."
+            to_return.append(sentence)
         return to_return
 
     def print_file(self, data, out):
@@ -83,10 +90,11 @@ class Data:
 
 d = Data()
 data = d.get_data("testo.txt")
+data = d.add_points(data)
 # d.print_data(data)
 stopped = d.delete_stopwords(data)
 # d.print_data(stopped)
 no_points = d.remove_punctuation(data)
 # d.print_data(no_points)
 stem = d.stemming(data)
-#d.print_data(stem)
+# d.print_data(stem)
