@@ -1,13 +1,24 @@
 from nltk.corpus import stopwords
 from nltk.tokenize import RegexpTokenizer
+import Stemmer
 
 
 class Data:
     def __init__(self):
         pass
 
-    def stemming(self):
-        pass
+    def stemming(self, data):
+        to_return = []
+        stemmer = Stemmer.Stemmer('english')
+        for sentence in data:
+            string = ""
+            temp = sentence.split(" ")
+            for word in temp:
+                new_word = stemmer.stemWord(word)
+                string += new_word
+                string += " "
+            to_return.append(string)
+        return to_return
 
     def remove_punctuation(self, data):
         to_return = []
@@ -77,3 +88,5 @@ stopped = d.delete_stopwords(data)
 # d.print_data(stopped)
 no_points = d.remove_punctuation(data)
 # d.print_data(no_points)
+stem = d.stemming(data)
+#d.print_data(stem)
