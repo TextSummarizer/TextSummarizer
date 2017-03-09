@@ -35,13 +35,13 @@ class Summarizer:
                 relevant_terms.append(words[i])
 
         # Generate pseudo-doc
-        res = [self.lookup_table.get(term) for term in relevant_terms]
+        res = [self.lookup_table.vec(term) for term in relevant_terms]
         return sum(res)
 
-    def _phrase_vectorizer(self):
+    def _sentence_vectorizer(self):
         pass
 
-    def _phrase_selection(self, centroid, sentences_dict):
+    def _sentence_selection(self, centroid, sentences_dict):
         from sklearn.metrics.pairwise import cosine_similarity
 
         # Generate ranked record (sentence_id - vector - sim_with_centroid)
@@ -62,11 +62,12 @@ class Summarizer:
         summary_word_num = 0
         stop = False
         i = 0
-        while not stop:
-            sent_word_num = len(self.sentence_retriever[0].split(" "))
+        while not stop and i < len(self.sentence_retriever):
+            sent_word_num = len(self.sentence_retriever[i].split(" "))
             if (summary_word_num + sent_word_num) <= word_limit:
                 summary_word_num += sent_word_num
-                result_list.append(self.sentence_retriever[rank[rank.keys()[i]]])
+                sentence_id = rank[i][0]
+                result_list.append(self.sentence_retriever[sentence_id])
                 i += 1
             else:
                 stop = True

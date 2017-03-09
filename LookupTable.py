@@ -1,4 +1,5 @@
 import gensim
+import numpy as np
 
 
 class LookupTable:
@@ -6,5 +7,8 @@ class LookupTable:
         import os
         self.model = gensim.models.Word2Vec.load_word2vec_format(os.path.abspath(model_path), binary=True)
 
-    def get(self, word):
-        return self.model[word]
+    def vec(self, word):
+        try:
+            return self.model[word]
+        except KeyError:
+            return np.array([0])
