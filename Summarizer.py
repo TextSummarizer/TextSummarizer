@@ -19,6 +19,11 @@ class Summarizer:
     def export(self, output_path):
         pass
 
+    """ Credo manchino:
+        - un booleano per inserire i punti (che io ho messo di default)
+        - un booleano per la rimozione della punteggiatura
+    """
+
     def _preprocessing(self, input_path):
         d = Data.Data()
         # Get splitted sentences
@@ -96,5 +101,6 @@ class Summarizer:
         return result
 
 
+# test
 s = Summarizer()
 print s.preprocessing("testo.txt")

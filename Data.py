@@ -91,6 +91,7 @@ class Data:
             out.write(line)
 
 
+# test
 d = Data()
 data = d.get_data("testo.txt")
 data = d.add_points(data)
