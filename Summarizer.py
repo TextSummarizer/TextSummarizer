@@ -1,4 +1,5 @@
 import LookupTable
+import Data
 
 
 class Summarizer:
@@ -18,8 +19,23 @@ class Summarizer:
     def export(self, output_path):
         pass
 
-    def _preprocessing(self):
-        pass
+    def _preprocessing(self, input_path):
+        d = Data.Data()
+        # Get splitted sentences
+        data = d.get_data(input_path)
+
+        # Add points at the end of the sentence
+        data = d.add_points(data)
+
+        # Gets the stem of every word if requested
+        if self.stemming:
+            data = d.stemming(data)
+
+        # Remove stopwords if requested
+        if self.remove_stopwords:
+            data = d.remove_stopwords(data)
+
+        return data
 
     def _gen_centroid(self, sentences):
         from sklearn.feature_extraction.text import TfidfVectorizer
@@ -78,3 +94,7 @@ class Summarizer:
             result += sentence
 
         return result
+
+
+s = Summarizer()
+print s.preprocessing("testo.txt")
