@@ -4,9 +4,6 @@ import Stemmer
 
 
 class Data:
-    def __init__(self):
-        pass
-
     def stemming(self, data):
         to_return = []
         stemmer = Stemmer.Stemmer('english')
@@ -89,27 +86,3 @@ class Data:
             for i in row:
                 line += i
             out.write(line)
-
-
-# test
-d = Data()
-data = d.get_data("testo.txt")
-data = d.add_points(data)
-print "get_data + add_points"
-print
-d.print_data(data)
-stopped = d.remove_stopwords(data)
-print
-print "remove_stopwords"
-print
-d.print_data(stopped)
-no_points = d.remove_punctuation(data)
-print
-print "remove_punctuation"
-print
-d.print_data(no_points)
-stem = d.stemming(data)
-print
-print "stemming"
-print
-d.print_data(stem)

@@ -1,5 +1,6 @@
 import LookupTable
 import Data
+import numpy
 
 
 class Summarizer:
@@ -15,9 +16,11 @@ class Summarizer:
 
     def summarize(self, input_path):
         sentences = self._preprocessing(input_path)
+        self.sentence_retriever = sentences
         centroid = self._gen_centroid(sentences)
         sentences_dict = self._sentence_vectorizer(sentences)
         summary = self._sentence_selection(centroid, sentences_dict)
+        return summary
 
     def export(self, output_path):
         pass
@@ -57,8 +60,20 @@ class Summarizer:
         res = [self.lookup_table.vec(term) for term in relevant_terms]
         return sum(res)
 
-    def _sentence_vectorizer(self):
-        return None
+    def _sentence_vectorizer(self, sentences):
+        dic = {}
+        for i in range(len(sentences)):
+
+            # Generate an array of zeros
+            sum_vec = numpy.zeros(self.lookup_table.model.layer1_size)
+            sentence = sentences[i].split(" ")
+
+            # Sums all the word's vec to create the sentence vec
+            for word in sentence:
+                word_vec = self.lookup_table.vec(word)
+                sum_vec = numpy.add(sum_vec, word_vec)
+            dic[i] = sum_vec
+        return dic
 
     def _sentence_selection(self, centroid, sentences_dict):
         from sklearn.metrics.pairwise import cosine_similarity
@@ -95,5 +110,12 @@ class Summarizer:
         result = ""
         for sentence in result_list:
             result += sentence
+            result += " " # ho aggiunto io uno spazio
 
         return result
+
+
+s = Summarizer(model_path="GoogleNews-vectors-negative300.bin")
+# sentences = s._preprocessing("testo.txt")
+# vec = s._sentence_vectorizer(sentences)
+print s.summarize("testo.txt")
