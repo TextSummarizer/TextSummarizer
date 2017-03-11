@@ -13,16 +13,14 @@ class Summarizer:
         self.coverage = coverage
         self.redundancy_threshold = redundancy_threshold
 
-    def summarize(self, text_path):
-        pass
+    def summarize(self, input_path):
+        sentences = self._preprocessing(input_path)
+        centroid = self._gen_centroid(sentences)
+        sentences_dict = self._sentence_vectorizer(sentences)
+        summary = self._sentence_selection(centroid, sentences_dict)
 
     def export(self, output_path):
         pass
-
-    """ Credo manchino:
-        - un booleano per inserire i punti (che io ho messo di default)
-        - un booleano per la rimozione della punteggiatura
-    """
 
     def _preprocessing(self, input_path):
         d = Data.Data()
@@ -60,7 +58,7 @@ class Summarizer:
         return sum(res)
 
     def _sentence_vectorizer(self):
-        pass
+        return None
 
     def _sentence_selection(self, centroid, sentences_dict):
         from sklearn.metrics.pairwise import cosine_similarity
@@ -99,8 +97,3 @@ class Summarizer:
             result += sentence
 
         return result
-
-
-# test
-s = Summarizer()
-print s.preprocessing("testo.txt")
