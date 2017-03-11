@@ -93,6 +93,7 @@ class Summarizer:
         word_limit = word_count * self.coverage
 
         result_list = []
+        all_ids = []
         summary_word_num = 0
         stop = False
         i = 0
@@ -101,21 +102,23 @@ class Summarizer:
             if (summary_word_num + sent_word_num) <= word_limit:
                 summary_word_num += sent_word_num
                 sentence_id = rank[i][0]
-                result_list.append(self.sentence_retriever[sentence_id])
+                all_ids.append(sentence_id)
+                # result_list.append(self.sentence_retriever[sentence_id])
                 i += 1
             else:
                 stop = True
+        all_ids = sorted(all_ids)
+        for id in all_ids:
+            result_list.append(self.sentence_retriever[id])
 
         # Format output
         result = ""
         for sentence in result_list:
             result += sentence
-            result += " " # ho aggiunto io uno spazio
+            result += " "  # ho aggiunto io uno spazio
 
         return result
 
 
-s = Summarizer(model_path="GoogleNews-vectors-negative300.bin")
-# sentences = s._preprocessing("testo.txt")
-# vec = s._sentence_vectorizer(sentences)
+s = Summarizer(model_path="googleNews-vectors-negative300.bin")
 print s.summarize("testo.txt")
