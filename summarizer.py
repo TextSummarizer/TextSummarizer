@@ -91,8 +91,7 @@ class Summarizer:
         word_count = sum([len(sentence.split(" ")) for sentence in self.sentence_retriever])
         word_limit = word_count * self.coverage
 
-        result_list = []
-        all_ids = []
+        sentence_ids = []
         summary_word_num = 0
         stop = False
         i = 0
@@ -101,19 +100,15 @@ class Summarizer:
             if (summary_word_num + sent_word_num) <= word_limit:
                 summary_word_num += sent_word_num
                 sentence_id = rank[i][0]
-                all_ids.append(sentence_id)
-                # result_list.append(self.sentence_retriever[sentence_id])
+                sentence_ids.append(sentence_id)
                 i += 1
             else:
                 stop = True
-        all_ids = sorted(all_ids)
-        for id in all_ids:
-            result_list.append(self.sentence_retriever[id])
+
+        sentence_ids = sorted(sentence_ids)
+        # for id in sentence_ids:
+        #    result_list.append(self.sentence_retriever[id])
+        result_list = map(lambda sent_id: self.sentence_retriever[sent_id], sentence_ids)
 
         # Format output
-        result = ""
-        for sentence in result_list:
-            result += sentence
-            result += " "
-
-        return result
+        return " ".join(result_list)
