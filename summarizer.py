@@ -106,8 +106,6 @@ class Summarizer:
                 stop = True
 
         sentence_ids = sorted(sentence_ids)
-        # for id in sentence_ids:
-        #    result_list.append(self.sentence_retriever[id])
         result_list = map(lambda sent_id: self.sentence_retriever[sent_id], sentence_ids)
 
         # Format output
