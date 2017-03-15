@@ -114,10 +114,6 @@ class Summarizer:
         result = ""
         for sentence in result_list:
             result += sentence
-            result += " "  # ho aggiunto io uno spazio
+            result += " "
 
         return result
-
-
-s = Summarizer(model_path="en_1000_no_stem/en.model")
-print s.summarize("testo.txt")
