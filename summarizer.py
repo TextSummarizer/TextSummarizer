@@ -1,12 +1,12 @@
-import LookupTable
-import Data
+import lookup_table
+import data as d
 import numpy
 
 
 class Summarizer:
     def __init__(self, model_path=None, stemming=False, remove_stopwords=False,
                  tfidf_threshold=0.5, coverage=0.5, redundancy_threshold=0.5):
-        self.lookup_table = LookupTable.LookupTable(model_path)
+        self.lookup_table = lookup_table.LookupTable(model_path)
         self.stemming = stemming
         self.remove_stopwords = remove_stopwords
         self.tfidf_threshold = tfidf_threshold
@@ -26,7 +26,6 @@ class Summarizer:
         pass
 
     def _preprocessing(self, input_path):
-        d = Data.Data()
         # Get splitted sentences
         data = d.get_data(input_path)
 
@@ -120,5 +119,5 @@ class Summarizer:
         return result
 
 
-s = Summarizer(model_path="googleNews-vectors-negative300.bin")
+s = Summarizer(model_path="en_1000_no_stem/en.model")
 print s.summarize("testo.txt")
