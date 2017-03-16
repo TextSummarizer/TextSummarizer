@@ -44,12 +44,12 @@ def remove_stopwords(data):
     return to_return
 
 
-def get_data(data):
+def get_data(file):
     to_return = []
-    f = open(data, "r")
+    f = open(file, "r")
     i = 0
-    while i < len(
-            data):  # scandisce fino alla fine dei giorni. per risolvere non ho salvato nell'array da ritornare le frasi(stringhe) vuote
+    file_len = _file_len(file)
+    while i < file_len:
         line = f.readline()
         sentences = line.split(". ")
         for sentence in sentences:
@@ -62,6 +62,31 @@ def get_data(data):
     return to_return
 
 
+def get_data(file):
+    to_return = []
+    f = open(file, "r")
+    i = 0
+    file_len = _file_len(file)
+    while i < file_len:
+        line = f.readline()
+        sentences = line.split(". ")
+        for sentence in sentences:
+            if sentence != "\n" and sentence != '':
+                if sentence.endswith("\n"):
+                    sentence = sentence.replace("\n", "")
+                to_return.append(sentence)
+        i += 1
+    f.close()
+    return to_return
+
+
+def _file_len(fname):
+    with open(fname) as f:
+        for i, l in enumerate(f):
+            pass
+    return i + 1
+
+
 def add_points(data):
     to_return = []
     for sentence in data:
@@ -71,13 +96,6 @@ def add_points(data):
             sentence += "."
         to_return.append(sentence)
     return to_return
-
-
-def print_file(data, out):
-    f = open(out, "w")
-    for string in data:
-        f.write(string)
-    f.close()
 
 
 def print_data(data):
@@ -92,3 +110,4 @@ def write_on(data, out):
         for i in row:
             line += i
         out.write(line)
+    out.close()

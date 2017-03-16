@@ -5,13 +5,13 @@ import numpy
 
 class Summarizer:
     def __init__(self, model_path=None, stemming=False, remove_stopwords=False,
-                 tfidf_threshold=0.5, coverage=0.5, redundancy_threshold=0.5):
+                 tfidf_threshold=0.5, summary_length=0.5, redundancy_threshold=0.5):
         self.lookup_table = lookup_table.LookupTable(model_path)
         self.stemming = stemming
         self.remove_stopwords = remove_stopwords
         self.tfidf_threshold = tfidf_threshold
         self.sentence_retriever = []
-        self.coverage = coverage
+        self.summary_length = summary_length
         self.redundancy_threshold = redundancy_threshold
 
     def summarize(self, input_path):
@@ -31,7 +31,7 @@ class Summarizer:
 
         # Add points at the end of the sentence
         data = d.add_points(data)
-
+        # aggiiungere punteggiatura
         # Gets the stem of every word if requested
         if self.stemming:
             data = d.stemming(data)
@@ -47,7 +47,7 @@ class Summarizer:
 
         # Get relevant terms
         tf = TfidfVectorizer()
-        tfidf = tf.fit_transform(sentences).toarray().sum(0)
+        tfidf = tf.fit_transform(sentences).toarray().sum(0)  # dividere e normalizzare
         words = tf.get_feature_names()
 
         relevant_terms = []
@@ -89,7 +89,7 @@ class Summarizer:
 
         # Get first k sentences until the limit (words%) is reached
         word_count = sum([len(sentence.split(" ")) for sentence in self.sentence_retriever])
-        word_limit = word_count * self.coverage
+        word_limit = word_count * self.summary_length
 
         sentence_ids = []
         summary_word_num = 0
@@ -110,3 +110,7 @@ class Summarizer:
 
         # Format output
         return " ".join(result_list)
+
+
+s = Summarizer(model_path="enwiki_20161220_skip_500.bin")
+print s.summarize("text.txt")
