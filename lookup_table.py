@@ -12,4 +12,11 @@ class LookupTable:
         try:
             return self.model[word]
         except KeyError:
-            return np.array([0])#cambiare
+            return np.array([0])
+
+    def unseen(self, word):
+        try:
+            self.model[word]
+            return False
+        except KeyError:
+            return True

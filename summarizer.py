@@ -58,12 +58,12 @@ class Summarizer:
 
         relevant_terms = []
         for i in range(len(tfidf)):
-            if tfidf[i] >= self.tfidf_threshold:
+            if tfidf[i] >= self.tfidf_threshold and not self.lookup_table.unseen(words[i]):
                 relevant_terms.append(words[i])
 
         # Generate pseudo-doc
         res = [self.lookup_table.vec(term) for term in relevant_terms]
-        return sum(res)
+        return sum(res) / len(res)
 
     def _sentence_vectorizer(self, sentences):
         dic = {}
@@ -71,20 +71,19 @@ class Summarizer:
 
             # Generate an array of zeros
             sum_vec = numpy.zeros(self.lookup_table.model.layer1_size)
-            sentence = sentences[i].split(" ")
+            sentence = [word for word in sentences[i].split(" ") if not self.lookup_table.unseen(word)]
 
             # Sums all the word's vec to create the sentence vec
             for word in sentence:
                 word_vec = self.lookup_table.vec(word)
                 sum_vec = numpy.add(sum_vec, word_vec)
-            dic[i] = sum_vec
+            dic[i] = sum_vec / len(sentence)
         return dic
 
     def _sentence_selection(self, centroid, sentences_dict):
         from scipy.spatial.distance import cosine as cos_sim
 
         # Generate ranked record (sentence_id - vector - sim_with_centroid)
-        centroid = centroid
         record = []
         for sentence_id in sentences_dict:
             vector = sentences_dict[sentence_id]
