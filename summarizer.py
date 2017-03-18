@@ -7,8 +7,8 @@ class Summarizer:
     def __init__(self,
                  model_path=None,
                  stemming=False,
-                 remove_stopwords=False,
-                 tfidf_threshold=0.5,
+                 remove_stopwords=True,
+                 tfidf_threshold=0.3,
                  summary_length=0.5,
                  redundancy_threshold=0.95):
 
@@ -16,13 +16,13 @@ class Summarizer:
         self.stemming = stemming
         self.remove_stopwords = remove_stopwords
         self.tfidf_threshold = tfidf_threshold
-        self.sentence_retriever = []
+        self.sentence_retriever = []                # populated in _preprocessing method
         self.summary_length = summary_length
         self.redundancy_threshold = redundancy_threshold
 
     def summarize(self, input_path):
         sentences = self._preprocessing(input_path)
-        self.sentence_retriever = sentences
+
         centroid = self._gen_centroid(sentences)
         sentences_dict = self._sentence_vectorizer(sentences)
         summary = self._sentence_selection(centroid, sentences_dict)
@@ -37,7 +37,13 @@ class Summarizer:
 
         # Add points at the end of the sentence
         data = d.add_points(data)
-        # aggiiungere punteggiatura
+
+        # Store the sentence before process them. We need them to build final summary
+        self.sentence_retriever = data
+
+        # Remove punctuation
+        data = d.remove_punctuation(data)
+
         # Gets the stem of every word if requested
         if self.stemming:
             data = d.stemming(data)
@@ -50,10 +56,12 @@ class Summarizer:
 
     def _gen_centroid(self, sentences):
         from sklearn.feature_extraction.text import TfidfVectorizer
+        import numpy as np
 
         # Get relevant terms
         tf = TfidfVectorizer()
-        tfidf = tf.fit_transform(sentences).toarray().sum(0)  # dividere e normalizzare
+        tfidf = tf.fit_transform(sentences).toarray().sum(0)
+        tfidf = np.divide(tfidf, tfidf.max())
         words = tf.get_feature_names()
 
         relevant_terms = []
