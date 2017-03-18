@@ -4,8 +4,14 @@ import numpy
 
 
 class Summarizer:
-    def __init__(self, model_path=None, stemming=False, remove_stopwords=False,
-                 tfidf_threshold=0.5, summary_length=0.5, redundancy_threshold=0.5):
+    def __init__(self,
+                 model_path=None,
+                 stemming=False,
+                 remove_stopwords=False,
+                 tfidf_threshold=0.5,
+                 summary_length=0.5,
+                 redundancy_threshold=0.95):
+
         self.lookup_table = lookup_table.LookupTable(model_path)
         self.stemming = stemming
         self.remove_stopwords = remove_stopwords
@@ -75,19 +81,19 @@ class Summarizer:
         return dic
 
     def _sentence_selection(self, centroid, sentences_dict):
-        from sklearn.metrics.pairwise import cosine_similarity
+        from scipy.spatial.distance import cosine as cos_sim
 
         # Generate ranked record (sentence_id - vector - sim_with_centroid)
-        centroid = centroid.reshape(1, -1)  # avoid warning
+        centroid = centroid
         record = []
         for sentence_id in sentences_dict:
-            vector = sentences_dict[sentence_id].reshape(1, -1)
-            similarity = cosine_similarity(centroid, vector)
-            record.append((sentence_id, vector, similarity[0, 0]))
+            vector = sentences_dict[sentence_id]
+            similarity = 1 - cos_sim(centroid, vector)
+            record.append((sentence_id, vector, similarity))
 
         rank = list(reversed(sorted(record, key=lambda tup: tup[2])))
 
-        # Get first k sentences until the limit (words%) is reached
+        # Get first k sentences until the limit (words%) is reached and avoiding redundancies
         word_count = sum([len(sentence.split(" ")) for sentence in self.sentence_retriever])
         word_limit = word_count * self.summary_length
 
@@ -95,14 +101,21 @@ class Summarizer:
         summary_word_num = 0
         stop = False
         i = 0
+
         while not stop and i < len(self.sentence_retriever):
+            new_vector = sentences_dict[i]
             sent_word_num = len(self.sentence_retriever[i].split(" "))
-            if (summary_word_num + sent_word_num) <= word_limit:
+
+            redundancy = [sentences_dict[k] for k in sentence_ids
+                          if (1 - cos_sim(new_vector, sentences_dict[k]) > self.redundancy_threshold)]
+
+            if not redundancy and i != 0:
                 summary_word_num += sent_word_num
                 sentence_id = rank[i][0]
                 sentence_ids.append(sentence_id)
-                i += 1
-            else:
+            i += 1
+
+            if (summary_word_num + sent_word_num) > word_limit:
                 stop = True
 
         sentence_ids = sorted(sentence_ids)
@@ -111,6 +124,3 @@ class Summarizer:
         # Format output
         return " ".join(result_list)
 
-
-s = Summarizer(model_path="enwiki_20161220_skip_500.bin")
-print s.summarize("text.txt")
