@@ -80,6 +80,14 @@ def get_data(file):
     return to_return
 
 
+def remove_doc(text):
+    to_return = []
+    for sentence in text:
+        if not sentence.startswith("doc"):
+            to_return.append(sentence)
+    return to_return
+
+
 def _file_len(fname):
     with open(fname) as f:
         for i, l in enumerate(f):
