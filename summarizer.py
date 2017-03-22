@@ -16,7 +16,7 @@ class Summarizer:
         self.stemming = stemming
         self.remove_stopwords = remove_stopwords
         self.tfidf_threshold = tfidf_threshold
-        self.sentence_retriever = []                # populated in _preprocessing method
+        self.sentence_retriever = []  # populated in _preprocessing method
         self.summary_length = summary_length
         self.redundancy_threshold = redundancy_threshold
 
@@ -130,4 +130,3 @@ class Summarizer:
 
         # Format output
         return " ".join(result_list)
-
