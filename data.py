@@ -57,22 +57,6 @@ def get_data(file):
             if sentence != "\n" and sentence != '':
                 if sentence.startswith(" "):
                     sentence.replace(" ", "")
-                to_return.append(sentence)
-        i += 1
-    f.close()
-    return to_return
-
-
-def get_data(file):
-    to_return = []
-    f = open(file, "r")
-    i = 0
-    file_len = _file_len(file)
-    while i < file_len:
-        line = f.readline()
-        sentences = line.split(". ")
-        for sentence in sentences:
-            if sentence != "\n" and sentence != '':
                 if sentence.endswith("\n"):
                     sentence = sentence.replace("\n", "")
                 to_return.append(sentence)
@@ -119,4 +103,10 @@ def write_on(data, out):
         for i in row:
             line += i
         out.write(line)
+    out.close()
+
+
+def export_summary(output_dir_path, filename, text):
+    out = open(output_dir_path + filename, "w")
+    out.write(text)
     out.close()

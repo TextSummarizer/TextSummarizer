@@ -9,7 +9,6 @@ class Summarizer:
                  stemming=False,
                  remove_stopwords=True,
                  tfidf_threshold=0.3,
-                 summary_length=0.5,
                  redundancy_threshold=0.95):
 
         self.lookup_table = lookup_table.LookupTable(model_path)
@@ -17,15 +16,14 @@ class Summarizer:
         self.remove_stopwords = remove_stopwords
         self.tfidf_threshold = tfidf_threshold
         self.sentence_retriever = []  # populated in _preprocessing method
-        self.summary_length = summary_length
         self.redundancy_threshold = redundancy_threshold
 
-    def summarize(self, input_path):
+    def summarize(self, input_path, summary_length=0.5):
         sentences = self._preprocessing(input_path)
 
         centroid = self._gen_centroid(sentences)
         sentences_dict = self._sentence_vectorizer(sentences)
-        summary = self._sentence_selection(centroid, sentences_dict)
+        summary = self._sentence_selection(centroid, sentences_dict, summary_length)
         return summary
 
     def export(self, output_path):
@@ -88,7 +86,7 @@ class Summarizer:
             dic[i] = sum_vec / len(sentence)
         return dic
 
-    def _sentence_selection(self, centroid, sentences_dict):
+    def _sentence_selection(self, centroid, sentences_dict, summary_length):
         from scipy.spatial.distance import cosine as cos_sim
 
         # Generate ranked record (sentence_id - vector - sim_with_centroid)
@@ -102,7 +100,7 @@ class Summarizer:
 
         # Get first k sentences until the limit (words%) is reached and avoiding redundancies
         word_count = sum([len(sentence.split(" ")) for sentence in self.sentence_retriever])
-        word_limit = word_count * self.summary_length
+        word_limit = word_count * summary_length
 
         sentence_ids = []
         summary_word_num = 0
