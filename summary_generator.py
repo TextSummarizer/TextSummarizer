@@ -3,13 +3,14 @@ import os
 
 class SummaryGenerator:
 
-    def __init__(self, body_dir_path, result_dir_path):
+    def __init__(self, body_dir_path, target_length_path):
         self.body_dir_path = body_dir_path
+        self.target_length_path = target_length_path
 
     @staticmethod
-    def _read_len(len_file_path):
+    def _read_len(target_length_path):
         res_map = {}
-        f = open(len_file_path, "r")
+        f = open(target_length_path, "r")
         lines = f.readlines()
 
         for line in lines:
@@ -19,20 +20,15 @@ class SummaryGenerator:
 
         return res_map
 
-    def run(self, len_path, model_path, stemming, remove_stopword, tfidf_threshold, redundancy_threshold):
-        import summarizer
-        s = summarizer.Summarizer(model_path,
-                                  stemming,
-                                  remove_stopword,
-                                  tfidf_threshold,
-                                  redundancy_threshold)
+    def run(self, summarizer, tfidf_threshold, redundancy_threshold):
+        # Read summary's target lengths. Store them in a map (file_name -> target_length)
+        len_map = self._read_len(self.target_length_path)
 
-        len_map = self._read_len(len_path)
+        # Set up the summarizer
+        summarizer.set_tfidf_threshold(tfidf_threshold)
+        summarizer.set_redundancy_threshold(redundancy_threshold)
 
+        # Iterate over text directory and use the model to generate summaries
         for filename in os.listdir(self.body_dir_path):
             summary_length = len_map[filename]
-            s.summarize(self.body_dir_path + filename, summary_length)
-
-
-s = SummaryGenerator('C:/Users/Peppo/Desktop/prova', 'C:/Users/Peppo/Desktop/prova')
-print s.run('C:/Users/Peppo/Desktop/len/en.txt')
+            summarizer.summarize(self.body_dir_path + filename, summary_length)

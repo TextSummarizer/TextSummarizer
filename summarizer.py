@@ -7,7 +7,7 @@ class Summarizer:
     def __init__(self,
                  model_path=None,
                  stemming=False,
-                 remove_stopwords=True,
+                 remove_stopwords=False,
                  tfidf_threshold=0.3,
                  redundancy_threshold=0.95):
 
@@ -17,6 +17,12 @@ class Summarizer:
         self.tfidf_threshold = tfidf_threshold
         self.sentence_retriever = []  # populated in _preprocessing method
         self.redundancy_threshold = redundancy_threshold
+
+    def set_tfidf_threshold(self, value):
+        self.tfidf_threshold = value
+
+    def set_redundancy_threshold(self, value):
+        self.redundancy_threshold = value
 
     def summarize(self, input_path, summary_length=0.5):
         sentences = self._preprocessing(input_path)

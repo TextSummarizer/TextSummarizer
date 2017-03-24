@@ -107,6 +107,11 @@ def write_on(data, out):
 
 
 def export_summary(output_dir_path, filename, text):
-    out = open(output_dir_path + filename, "w")
+    # create directory if does not exist
+    import os
+    if not os.path.exists(output_dir_path):
+        os.mkdir(output_dir_path)
+
+    out = open(output_dir_path + '/' + filename, "w")
     out.write(text)
     out.close()
