@@ -47,20 +47,21 @@ def remove_stopwords(data):
 
 def get_data(file):
     to_return = []
-    f = open(file, "r")
-    i = 0
-    file_len = _file_len(file)
-    while i < file_len:
-        line = f.readline()
-        sentences = line.split(". ")
-        for sentence in sentences:
-            if sentence != "\n" and sentence != '':
-                if sentence.startswith(" "):
-                    sentence.replace(" ", "")
-                if sentence.endswith("\n"):
-                    sentence = sentence.replace("\n", "")
-                to_return.append(sentence)
-        i += 1
+
+    with io.open('C:/05cd7ebf19355e466944dd0a83e4c564_body.txt', 'r', encoding='utf-8') as f:
+        i = 0
+        file_len = _file_len(file)
+        while i < file_len:
+            line = f.readline()
+            sentences = line.split(". ")
+            for sentence in sentences:
+                if sentence != "\n" and sentence != '':
+                    if sentence.startswith(" "):
+                        sentence.replace(" ", "")
+                    if sentence.endswith("\n"):
+                        sentence = sentence.replace("\n", "")
+                    to_return.append(sentence)
+            i += 1
     f.close()
     return to_return
 
@@ -113,5 +114,5 @@ def export_summary(output_dir_path, filename, text):
         os.mkdir(output_dir_path)
 
     out = open(output_dir_path + '/' + filename, "w")
-    out.write(text)
+    out.write(text.encode('utf-8'))
     out.close()

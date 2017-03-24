@@ -1,11 +1,12 @@
-import os
+import os, data
 
 
 class SummaryGenerator:
 
-    def __init__(self, body_dir_path, target_length_path):
+    def __init__(self, body_dir_path, target_length_path, destination_path):
         self.body_dir_path = body_dir_path
         self.target_length_path = target_length_path
+        self.destination_path = destination_path
 
     @staticmethod
     def _read_len(target_length_path):
@@ -30,5 +31,7 @@ class SummaryGenerator:
 
         # Iterate over text directory and use the model to generate summaries
         for filename in os.listdir(self.body_dir_path):
+            print "Processing " + filename
             summary_length = len_map[filename]
-            summarizer.summarize(self.body_dir_path + filename, summary_length)
+            summary = summarizer.summarize(self.body_dir_path + filename, summary_length)
+            data.export_summary(output_dir_path=self.destination_path, filename=filename, text=summary)

@@ -24,7 +24,7 @@ class Summarizer:
     def set_redundancy_threshold(self, value):
         self.redundancy_threshold = value
 
-    def summarize(self, input_path, summary_length=0.5):
+    def summarize(self, input_path, summary_length):
         sentences = self._preprocessing(input_path)
 
         centroid = self._gen_centroid(sentences)
@@ -105,8 +105,9 @@ class Summarizer:
         rank = list(reversed(sorted(record, key=lambda tup: tup[2])))
 
         # Get first k sentences until the limit (words%) is reached and avoiding redundancies
-        word_count = sum([len(sentence.split(" ")) for sentence in self.sentence_retriever])
-        word_limit = word_count * summary_length
+        # word_count = sum([len(sentence.split(" ")) for sentence in self.sentence_retriever])
+        # word_limit = word_count * summary_length
+        word_limit = summary_length
 
         sentence_ids = []
         summary_word_num = 0
