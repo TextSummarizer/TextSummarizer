@@ -85,11 +85,13 @@ class Summarizer:
             sum_vec = numpy.zeros(self.lookup_table.model.layer1_size)
             sentence = [word for word in sentences[i].split(" ") if not self.lookup_table.unseen(word)]
 
-            # Sums all the word's vec to create the sentence vec
-            for word in sentence:
-                word_vec = self.lookup_table.vec(word)
-                sum_vec = numpy.add(sum_vec, word_vec)
-            dic[i] = sum_vec / len(sentence)
+            # Sums all the word's vec to create the sentence vec if sentence is not empty
+            # When can sentence be empty? When is composed from all unseen words
+            if sentence:
+                for word in sentence:
+                    word_vec = self.lookup_table.vec(word)
+                    sum_vec = numpy.add(sum_vec, word_vec)
+                dic[i] = sum_vec / len(sentence)
         return dic
 
     def _sentence_selection(self, centroid, sentences_dict, summary_length):
@@ -114,16 +116,16 @@ class Summarizer:
         stop = False
         i = 0
 
-        while not stop and i < len(self.sentence_retriever):
-            new_vector = sentences_dict[i]
-            sent_word_num = len(self.sentence_retriever[i].split(" "))
+        while not stop and i < len(rank):
+            sentence_id = rank[i][0]
+            new_vector = sentences_dict[sentence_id]
+            sent_word_num = len(self.sentence_retriever[sentence_id].split(" "))
 
             redundancy = [sentences_dict[k] for k in sentence_ids
                           if (1 - cos_sim(new_vector, sentences_dict[k]) > self.redundancy_threshold)]
 
-            if not redundancy and i != 0:
+            if not redundancy:
                 summary_word_num += sent_word_num
-                sentence_id = rank[i][0]
                 sentence_ids.append(sentence_id)
             i += 1
 

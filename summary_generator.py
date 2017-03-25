@@ -1,4 +1,5 @@
-import os, data
+import os
+import data
 
 
 class SummaryGenerator:
@@ -31,7 +32,6 @@ class SummaryGenerator:
 
         # Iterate over text directory and use the model to generate summaries
         for filename in os.listdir(self.body_dir_path):
-            print "Processing " + filename
             summary_length = len_map[filename]
             summary = summarizer.summarize(self.body_dir_path + filename, summary_length)
             data.export_summary(output_dir_path=self.destination_path, filename=filename, text=summary)

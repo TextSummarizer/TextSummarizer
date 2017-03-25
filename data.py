@@ -48,7 +48,7 @@ def remove_stopwords(data):
 def get_data(file):
     to_return = []
 
-    with io.open('C:/05cd7ebf19355e466944dd0a83e4c564_body.txt', 'r', encoding='utf-8') as f:
+    with io.open(file, 'r', encoding='utf-8') as f:
         i = 0
         file_len = _file_len(file)
         while i < file_len:
