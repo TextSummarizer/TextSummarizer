@@ -1,7 +1,8 @@
 from nltk.corpus import stopwords
-from nltk.tokenize import RegexpTokenizer
+from nltk.tokenize import TreebankWordTokenizer
 import Stemmer
 import io
+import re
 
 
 def stemming(data):
@@ -18,16 +19,28 @@ def stemming(data):
     return to_return
 
 
-def remove_punctuation(data):
+def remove_punctuation_regex(data):
     to_return = []
-    tokenizer = RegexpTokenizer(r'\w+')
+    p = re.compile(r'\W+')
     for sentence in data:
         temp = ""
-        tokenized = tokenizer.tokenize(sentence.lower())
+        tokenized = p.split(sentence.lower())
         for word in tokenized:
             temp += word
             temp += " "
         to_return.append(temp)
+    return to_return
+
+
+def remove_punctuation_nltk(data):
+    to_return = []
+    for sentence in data:
+        temp = ""
+        tokenized = TreebankWordTokenizer().tokenize(sentence.lower())
+        for word in tokenized:
+            temp += word
+            temp += " "
+        to_return.append(temp[:-1])
     return to_return
 
 

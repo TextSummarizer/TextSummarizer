@@ -3,7 +3,6 @@ import data
 
 
 class SummaryGenerator:
-
     def __init__(self, body_dir_path, target_length_path, destination_path):
         self.body_dir_path = body_dir_path
         self.target_length_path = target_length_path

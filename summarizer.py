@@ -8,13 +8,15 @@ class Summarizer:
                  model_path=None,
                  stemming=False,
                  remove_stopwords=False,
+                 regex=False,
                  tfidf_threshold=0.3,
-                 redundancy_threshold=0.95):
+                 redundancy_threshold=0.95):  # dato che ci sono i metodi per settare le soglie, non possiamo toglierli dal costruttore?
 
         self.lookup_table = lookup_table.LookupTable(model_path)
         self.stemming = stemming
         self.remove_stopwords = remove_stopwords
         self.tfidf_threshold = tfidf_threshold
+        self.regex = regex
         self.sentence_retriever = []  # populated in _preprocessing method
         self.redundancy_threshold = redundancy_threshold
 
@@ -25,8 +27,7 @@ class Summarizer:
         self.redundancy_threshold = value
 
     def summarize(self, input_path, summary_length):
-        sentences = self._preprocessing(input_path)
-
+        sentences = self._preprocessing(input_path, self.regex)
         centroid = self._gen_centroid(sentences)
         sentences_dict = self._sentence_vectorizer(sentences)
         summary = self._sentence_selection(centroid, sentences_dict, summary_length)
@@ -35,7 +36,7 @@ class Summarizer:
     def export(self, output_path):
         pass
 
-    def _preprocessing(self, input_path):
+    def _preprocessing(self, input_path, regex):
         # Get splitted sentences
         data = d.get_data(input_path)
 
@@ -46,7 +47,10 @@ class Summarizer:
         self.sentence_retriever = data
 
         # Remove punctuation
-        data = d.remove_punctuation(data)
+        if regex:
+            data = d.remove_punctuation_regex(data)
+        else:
+            data = d.remove_punctuation_nltk(data)
 
         # Gets the stem of every word if requested
         if self.stemming:
