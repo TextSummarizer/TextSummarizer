@@ -36,8 +36,8 @@ def _run_rouge_script(script_path, data_path):
     return perl_script.communicate()[0]
 
 
-def _post_processing(message, results_file, path):
-    os.remove('settings.xml')
+def _post_processing(message, results_file, path=None):
+    # os.remove('settings.xml')
     message_lines = message.split("\n")
     r1 = message_lines[1]
     r2 = message_lines[5]
@@ -45,23 +45,33 @@ def _post_processing(message, results_file, path):
     r4 = message_lines[13]
     rl = message_lines[17]
 
-    config_name = path.split('/')[-1]
+    r1_value = float(r1.split(" ")[3])
+    r2_value = float(r2.split(" ")[3])
+    r3_value = float(r3.split(" ")[3])
+    r4_value = float(r4.split(" ")[3])
+    rl_value = float(rl.split(" ")[3])
+    r_mean = (r1_value + r2_value + r3_value + r4_value + rl_value) / float(5);
 
-    results_file.write(config_name + '\n')
+    if path is not None:
+        config_name = path.split('/')[-1]
+        results_file.write(config_name + '\n')
+
     results_file.write(r1)
     results_file.write(r2)
     results_file.write(r3)
     results_file.write(r4)
-    results_file.write(rl + '\n')
+    results_file.write(rl)
+    results_file.write("mean: " + str(r_mean) + '\n\n')
 
 
-def compute(tfidf_values,                   # range of tfidf you want to check
-            redundancy_values,              # redundancy values you want to check
-            results_path,                   # tell me where store your results
-            script_path,                    # tell me where is your rouge script
-            data_path,                      # tell me where is your data (same dir of rouge script, generally)
-            summary_destination_path,       # tell me where you stored your system-generated summaries
-            gold_standard_path):            # tell me where are your gold standards
+def compute_for_grid_search(
+        tfidf_values,                       # range of tfidf you want to check
+        redundancy_values,                  # redundancy values you want to check
+        results_path,                       # tell me where store your results
+        script_path,                        # tell me where is your rouge script
+        data_path,                          # tell me where is your data (same dir of rouge script, generally)
+        summary_destination_path,           # tell me where are stored your system-generated summaries
+        gold_standard_path):                # tell me where are your gold standards
 
     results = open(results_path, 'w')
     for tfidf in tfidf_values:
@@ -78,3 +88,16 @@ def compute(tfidf_values,                   # range of tfidf you want to check
 
     results.close()
     print 'Rouge: done!'
+
+
+def compute(
+        results_path,                       # tell me where store your results
+        script_path,                        # tell me where is your rouge script
+        data_path,                          # tell me where is your data (same dir of rouge script, generally)
+        system_summary_path,                # tell me where are stored your system-generated summaries
+        gold_standard_path):
+
+    results = open(results_path, 'w')
+    _create_settings_file(system_summary_path, gold_standard_path)
+    msg = _run_rouge_script(script_path, data_path)
+    _post_processing(msg, results, system_summary_path)

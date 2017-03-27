@@ -43,11 +43,11 @@ for tfidf_value in tfidf_values:
 print "ok.\n"
 
 print 'Grid search on summaryes with ROUGE metrics: STARTED!'
-rouge.compute(tfidf_values=tfidf_values,
-              redundancy_values=redundancy_values,
-              results_path=results_path,
-              script_path=script_path,
-              data_path=data_path,
-              summary_destination_path=summary_destination_root,
-              gold_standard_path=gold_standard_path)
+rouge.compute_for_grid_search(tfidf_values=tfidf_values,
+                              redundancy_values=redundancy_values,
+                              results_path=results_path,
+                              script_path=script_path,
+                              data_path=data_path,
+                              summary_destination_path=summary_destination_root,
+                              gold_standard_path=gold_standard_path)
 print "Everything done. Now go to your result path and see results. Bye!"
