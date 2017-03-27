@@ -1,6 +1,6 @@
 import lookup_table
 import data as d
-import numpy
+import numpy as np
 
 
 class Summarizer:
@@ -8,9 +8,9 @@ class Summarizer:
                  model_path=None,
                  stemming=False,
                  remove_stopwords=False,
-                 regex=False,
+                 regex=True,
                  tfidf_threshold=0.3,
-                 redundancy_threshold=0.95):  # dato che ci sono i metodi per settare le soglie, non possiamo toglierli dal costruttore?
+                 redundancy_threshold=0.95):
 
         self.lookup_table = lookup_table.LookupTable(model_path)
         self.stemming = stemming
@@ -86,7 +86,7 @@ class Summarizer:
         for i in range(len(sentences)):
 
             # Generate an array of zeros
-            sum_vec = numpy.zeros(self.lookup_table.model.layer1_size)
+            sum_vec = np.zeros(self.lookup_table.model.layer1_size)
             sentence = [word for word in sentences[i].split(" ") if not self.lookup_table.unseen(word)]
 
             # Sums all the word's vec to create the sentence vec if sentence is not empty
@@ -94,7 +94,7 @@ class Summarizer:
             if sentence:
                 for word in sentence:
                     word_vec = self.lookup_table.vec(word)
-                    sum_vec = numpy.add(sum_vec, word_vec)
+                    sum_vec = np.add(sum_vec, word_vec)
                 dic[i] = sum_vec / len(sentence)
         return dic
 
@@ -133,7 +133,7 @@ class Summarizer:
                 sentence_ids.append(sentence_id)
             i += 1
 
-            if (summary_word_num + sent_word_num) > word_limit:
+            if summary_word_num > word_limit:
                 stop = True
 
         sentence_ids = sorted(sentence_ids)
