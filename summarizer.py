@@ -113,27 +113,27 @@ class Summarizer:
         # Get first k sentences until the limit (words%) is reached and avoiding redundancies
         # word_count = sum([len(sentence.split(" ")) for sentence in self.sentence_retriever])
         # word_limit = word_count * summary_length
-        word_limit = summary_length
+        char_limit = summary_length
 
         sentence_ids = []
-        summary_word_num = 0
+        summary_char_num = 0
         stop = False
         i = 0
 
         while not stop and i < len(rank):
             sentence_id = rank[i][0]
             new_vector = sentences_dict[sentence_id]
-            sent_word_num = len(self.sentence_retriever[sentence_id].split(" "))
+            sent_char_num = len(self.sentence_retriever[sentence_id])
 
             redundancy = [sentences_dict[k] for k in sentence_ids
                           if (1 - cos_sim(new_vector, sentences_dict[k]) > self.redundancy_threshold)]
 
             if not redundancy:
-                summary_word_num += sent_word_num
+                summary_char_num += sent_char_num
                 sentence_ids.append(sentence_id)
             i += 1
 
-            if summary_word_num > word_limit:
+            if summary_char_num > char_limit:
                 stop = True
 
         sentence_ids = sorted(sentence_ids)
