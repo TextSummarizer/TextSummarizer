@@ -29,7 +29,7 @@ def _run_rouge_script(script_path, data_path):
     import subprocess
 
     perl_script = subprocess.Popen(
-        ["perl", script_path, "-e " + data_path, "-a", "-2 4", "-n 4", "-u", "-m",
+        ["perl", script_path, "-e " + data_path, "-a", "-n 4", "-u", "-m",
          "settings.xml"], stdout=subprocess.PIPE)
     return perl_script.communicate()[0]
 

@@ -1,17 +1,23 @@
-tfidf_02_redundancy_095
-0 ROUGE-1 Average_R: 0,49207 (95%-conf.int. 0.47332 - 0.51008)
-0 ROUGE-2 Average_R: 0,13889 (95%-conf.int. 0.12327 - 0.15561)
-0 ROUGE-3 Average_R: 0,04237 (95%-conf.int. 0.03218 - 0.05392)
-0 ROUGE-4 Average_R: 0,01913 (95%-conf.int. 0.01214 - 0.02740)
-0 ROUGE-L Average_R: 0,30482 (95%-conf.int. 0.28919 - 0.32135)
-mean: 0,199456
+tfidf:       .2
+redundancy:  .95
 
+0 ROUGE-1 Average_R: 0.49207 (95%-conf.int. 0.47332 - 0.51008)
+0 ROUGE-2 Average_R: 0.13889 (95%-conf.int. 0.12327 - 0.15561)
+0 ROUGE-3 Average_R: 0.04237 (95%-conf.int. 0.03218 - 0.05392)
+0 ROUGE-4 Average_R: 0.01913 (95%-conf.int. 0.01214 - 0.02740)
+0 ROUGE-L Average_R: 0.30482 (95%-conf.int. 0.28919 - 0.32135)
 
-tfidf_03_redundancy_095
-0 ROUGE-1 Average_R: 0,48428 (95%-conf.int. 0.46302 - 0.50366)
-0 ROUGE-2 Average_R: 0,14287 (95%-conf.int. 0.12555 - 0.16232)
-0 ROUGE-3 Average_R: 0,04418 (95%-conf.int. 0.03291 - 0.05907)
-0 ROUGE-4 Average_R: 0,02046 (95%-conf.int. 0.01190 - 0.03160)
-0 ROUGE-L Average_R: 0,30185 (95%-conf.int. 0.28455 - 0.31975)
-mean: 0,198728
+mean: 0.199456
+
+------------------------------------------------------------------
+
+tfidf:        .3
+redundancy:   .95
+0 ROUGE-1 Average_R: 0.48428 (95%-conf.int. 0.46302 - 0.50366)
+0 ROUGE-2 Average_R: 0.14287 (95%-conf.int. 0.12555 - 0.16232)
+0 ROUGE-3 Average_R: 0.04418 (95%-conf.int. 0.03291 - 0.05907)
+0 ROUGE-4 Average_R: 0.02046 (95%-conf.int. 0.01190 - 0.03160)
+0 ROUGE-L Average_R: 0.30185 (95%-conf.int. 0.28455 - 0.31975)
+
+mean: 0.198728
 
