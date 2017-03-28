@@ -8,9 +8,8 @@ def _create_settings_file(systems_dir_path, gold_standard_path):
     settings_file = open('settings.xml', 'w')
     settings_file.write('<ROUGE_EVAL version=\"1.5.5\">\n')
 
-    task_counter = 0
     for filename in os.listdir(systems_dir_path):
-        settings_file.write('<EVAL ID=\"TASK_' + str(task_counter) + '\">\n')
+        settings_file.write('<EVAL ID=\"TASK_' + filename.split("_")[0] + '\">\n')
         settings_file.write('<MODEL-ROOT>' + models_dir_path + '</MODEL-ROOT>\n')
         settings_file.write('<PEER-ROOT>' + systems_dir_path + '</PEER-ROOT>\n')
         settings_file.write('<INPUT-FORMAT TYPE=\"SPL\"></INPUT-FORMAT>\n')
@@ -22,7 +21,6 @@ def _create_settings_file(systems_dir_path, gold_standard_path):
         settings_file.write('<M ID=\"0\">' + summary_filename + '</M>\n')
         settings_file.write('</MODELS>\n')
         settings_file.write('</EVAL>\n')
-        task_counter += 1
     settings_file.write('</ROUGE_EVAL>')
     settings_file.close()
 
@@ -31,7 +29,7 @@ def _run_rouge_script(script_path, data_path):
     import subprocess
 
     perl_script = subprocess.Popen(
-        ["perl", script_path, "-e " + data_path, "-f A", "-a", "-s", "-n 4",
+        ["perl", script_path, "-e " + data_path, "-a", "-2 4", "-n 4", "-u", "-m",
          "settings.xml"], stdout=subprocess.PIPE)
     return perl_script.communicate()[0]
 
@@ -96,6 +94,10 @@ def compute(
         data_path,                          # tell me where is your data (same dir of rouge script, generally)
         system_summary_path,                # tell me where are stored your system-generated summaries
         gold_standard_path):
+
+    """import summary_generator
+    target_length_path = 'C:/prove-disperate/length.txt'
+    lmap = summary_generator.read_len(target_length_path)"""
 
     results = open(results_path, 'w')
     _create_settings_file(system_summary_path, gold_standard_path)

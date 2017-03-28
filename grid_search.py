@@ -3,7 +3,7 @@ import summary_generator as sg
 import rouge
 
 # Set your paths
-model_path = 'C:/Users/Peppo/Desktop/GoogleNews-vectors-negative300.bin'
+model_path = 'C:/Users/Peppo/Desktop/w2vm/enwiki_20161220_skip_300.bin'
 summary_destination_root = 'C:/grid-search/'
 script_path = 'C:/Users/Peppo/Desktop/w2vm/rouge4MultiLing/rouge/ROUGE-1.5.5.pl'
 data_path = 'C:/Users/Peppo/Desktop/w2vm/rouge4MultiLing/rouge/data'
@@ -13,7 +13,7 @@ training_body_path = 'C:/training/body/'
 training_length_path = 'C:/training/length.txt'
 
 # Set your ranges
-tfidf_values = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+tfidf_values = [0.2, 0.25, 0.3, 0.35]
 redundancy_values = [0.8, 0.85, 0.9, 0.95]
 
 # Init my summarizer
