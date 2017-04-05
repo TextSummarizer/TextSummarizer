@@ -2,19 +2,10 @@ from django.db import models
 
 
 class Document(models.Model):
-    title = models.TextField(default=None)
-    text = models.TextField()
+    # id = models.AutoField()
+    doc = models.FileField(default=None)
     summary_length = models.IntegerField()
+    summary = models.TextField(default=None, blank=True)
 
     def __str__(self):
-        return self.title
-
-
-class Summary(models.Model):
-    text = models.TextField()
-
-    def __str__(self):
-        return self.text
-
-    class Meta:
-        verbose_name_plural = "Summaries"
+        return self.id

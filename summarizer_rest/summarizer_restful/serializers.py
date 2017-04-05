@@ -1,14 +1,10 @@
-from models import Document, Summary
+from models import Document
 from rest_framework import serializers
 
 
-class DocumentSerializer(serializers.HyperlinkedModelSerializer):
+class DocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Document
-        fields = ('title', 'text', 'summary_length')
+        fields = ('doc', 'summary_length', 'summary')
 
 
-class SummarySerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = Summary
-        fields = ('text')
