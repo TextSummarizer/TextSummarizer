@@ -8,8 +8,8 @@ class Summarizer:
                  model_path=None,
                  stemming=False,
                  remove_stopwords=False,
+                 tfidf_threshold=0.2,
                  regex=True,
-                 tfidf_threshold=0.3,
                  redundancy_threshold=0.95):
 
         self.lookup_table = lookup_table.LookupTable(model_path)
