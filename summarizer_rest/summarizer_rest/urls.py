@@ -21,5 +21,5 @@ from django.contrib import admin
 # Additionally, we include login URLs for the browsable API.
 urlpatterns = [
     url(r'^', include("summarizer_restful.urls")),
-    url(r'^admin/', admin.site.urls)
+    url(r'^admin/', admin.site.urls),
 ]

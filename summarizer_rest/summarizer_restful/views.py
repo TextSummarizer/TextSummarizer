@@ -1,37 +1,25 @@
-from models import Document
-from serializers import DocumentSerializer
 from rest_framework import generics
-import summarizer
 from rest_framework import mixins
+from rest_framework.response import Response
+
+import summarizer
+
+s = summarizer.Summarizer(
+    model_path="C:/Users/Gianni Mastroscianni/Desktop/Magistrale/Accesso Intelligente all'Informazione ed Elaborazione del Linguaggio Naturale/Progetto/word2vec_models/enwiki_20161220_skip_300.bin",
+    regex=True)
 
 
-class DocumentList(generics.ListCreateAPIView):
-    queryset = Document.objects.all()
-    serializer_class = DocumentSerializer
+class Summary(generics.GenericAPIView, mixins.RetrieveModelMixin):
+    def get(self, request):
+        text = str(request.query_params.get('text'))
+        print request.data
+        print text
+        redundancy_threshold = request.query_params.get('redundancy_threshold')
+        tfidf = request.query_params.get('tfidf')
+        summary_length = request.query_params.get('summary_length')
 
+        s.set_tfidf_threshold(tfidf)
+        s.set_redundancy_threshold(redundancy_threshold)
+        summary = s.summarize(text, summary_length)
 
-class DocumentDetail(mixins.RetrieveModelMixin,
-                     mixins.UpdateModelMixin,
-                     mixins.DestroyModelMixin,
-                     generics.GenericAPIView):
-    queryset = Document.objects.all()
-    serializer_class = DocumentSerializer
-
-    def get(self, request, *args, **kwargs):
-        return self.retrieve(request, *args, **kwargs)
-
-    def put(self, request, *args, **kwargs):
-        return self.update(request, *args, **kwargs)
-
-    def delete(self, request, *args, **kwargs):
-        return self.destroy(request, *args, **kwargs)
-
-    # qui dovremmo eseguire il nostro codice
-
-    def summarize(self, pk):
-        obj = self.get(pk)
-        s = summarizer.Summarizer(
-            model_path="C:/Users/Gianni Mastroscianni/Desktop/Magistrale/Accesso Intelligente all'Informazione ed Elaborazione del Linguaggio Naturale/Progetto/word2vec_models/enwiki_20161220_skip_300",
-            regex=True)
-        summary = s.summarize(obj.doc, obj.summary_length)
-        obj.summary = summary
+        return Response(summary)
