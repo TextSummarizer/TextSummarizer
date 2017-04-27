@@ -98,23 +98,24 @@ class Summarizer:
                 dic[i] = sum_vec / len(sentence)
         return dic
 
-    def _sentence_selection(self, centroid, sentences_dict, summary_length):
-        from scipy.spatial.distance import cosine as cos_sim
+    def _sentence_selection(self, centroid, sentences_dict, char_limit):
+        from scipy.spatial.distance import cosine
+        import math
 
         # Generate ranked record (sentence_id - vector - sim_with_centroid)
         record = []
         for sentence_id in sentences_dict:
             vector = sentences_dict[sentence_id]
-            similarity = 1 - cos_sim(centroid, vector)
+            sentence_length = len(self.sentence_retriever[sentence_id])
+            centroid_similarity = (1 - cosine(centroid, vector))
+            num = math.pow(centroid_similarity, 2)
+            den = math.log(sentence_length)
+            similarity = num / den
             record.append((sentence_id, vector, similarity))
 
         rank = list(reversed(sorted(record, key=lambda tup: tup[2])))
 
         # Get first k sentences until the limit (words%) is reached and avoiding redundancies
-        # word_count = sum([len(sentence.split(" ")) for sentence in self.sentence_retriever])
-        # word_limit = word_count * summary_length
-        char_limit = summary_length
-
         sentence_ids = []
         summary_char_num = 0
         stop = False
@@ -126,7 +127,7 @@ class Summarizer:
             sent_char_num = len(self.sentence_retriever[sentence_id])
 
             redundancy = [sentences_dict[k] for k in sentence_ids
-                          if (1 - cos_sim(new_vector, sentences_dict[k]) > self.redundancy_threshold)]
+                          if (1 - cosine(new_vector, sentences_dict[k]) > self.redundancy_threshold)]
 
             if not redundancy:
                 summary_char_num += sent_char_num
@@ -140,4 +141,6 @@ class Summarizer:
         result_list = map(lambda sent_id: self.sentence_retriever[sent_id], sentence_ids)
 
         # Format output
-        return " ".join(result_list)
+        summary = " ".join(result_list)
+        # return summary[:char_limit]
+        return summary
