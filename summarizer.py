@@ -1,3 +1,4 @@
+# coding=utf-8
 import lookup_table
 import data as d
 import numpy as np
@@ -11,7 +12,6 @@ class Summarizer:
                  tfidf_threshold=0.2,
                  regex=True,
                  redundancy_threshold=0.95):
-
         self.lookup_table = lookup_table.LookupTable(model_path)
         self.stemming = stemming
         self.remove_stopwords = remove_stopwords
@@ -26,15 +26,18 @@ class Summarizer:
     def set_redundancy_threshold(self, value):
         self.redundancy_threshold = value
 
-    def summarize(self, input_path, summary_length):
-        sentences = self._preprocessing(input_path, self.regex)
-        centroid = self._gen_centroid(sentences)
-        sentences_dict = self._sentence_vectorizer(sentences)
-        summary = self._sentence_selection(centroid, sentences_dict, summary_length)
-        return summary
-
-    def export(self, output_path):
-        pass
+    def summarize(self, text, summary_length, query_based_token):
+        error_msg = self._check_params(self.redundancy_threshold, self.tfidf_threshold, summary_length)
+        if not error_msg == "":
+            return "==error==\n" + error_msg
+        else:
+            sentences = self._preprocessing(text, self.regex)
+            centroid = self._gen_centroid_tfidf(sentences) \
+                if not query_based_token \
+                else self._gen_centroid_query_based(query_based_token)
+            sentences_dict = self._sentence_vectorizer(sentences)
+            summary = self._sentence_selection(centroid, sentences_dict, summary_length)
+            return summary
 
     def _preprocessing(self, input_path, regex):
         # Get splitted sentences
@@ -62,7 +65,7 @@ class Summarizer:
 
         return data
 
-    def _gen_centroid(self, sentences):
+    def _gen_centroid_tfidf(self, sentences):
         from sklearn.feature_extraction.text import TfidfVectorizer
         import numpy as np
 
@@ -79,6 +82,10 @@ class Summarizer:
 
         # Generate pseudo-doc
         res = [self.lookup_table.vec(term) for term in relevant_terms]
+        return sum(res) / len(res)
+
+    def _gen_centroid_query_based(self, query_based_token):
+        res = [self.lookup_table.vec(term) for term in query_based_token]
         return sum(res) / len(res)
 
     def _sentence_vectorizer(self, sentences):
@@ -98,7 +105,7 @@ class Summarizer:
                 dic[i] = sum_vec / len(sentence)
         return dic
 
-    def _sentence_selection(self, centroid, sentences_dict, char_limit):
+    def _sentence_selection(self, centroid, sentences_dict, summary_length):
         from scipy.spatial.distance import cosine
         import math
 
@@ -121,21 +128,30 @@ class Summarizer:
         stop = False
         i = 0
 
-        while not stop and i < len(rank):
-            sentence_id = rank[i][0]
-            new_vector = sentences_dict[sentence_id]
-            sent_char_num = len(self.sentence_retriever[sentence_id])
+        # Switch summarization mode: percentage VS number of sentences
+        text_length = sum([len(x) for x in self.sentence_retriever])
 
-            redundancy = [sentences_dict[k] for k in sentence_ids
-                          if (1 - cosine(new_vector, sentences_dict[k]) > self.redundancy_threshold)]
+        if summary_length <= 1:
+            limit = int(text_length * summary_length)
 
-            if not redundancy:
-                summary_char_num += sent_char_num
-                sentence_ids.append(sentence_id)
-            i += 1
+            while not stop and i < len(rank):
+                sentence_id = rank[i][0]
+                new_vector = sentences_dict[sentence_id]
+                sent_char_num = len(self.sentence_retriever[sentence_id])
+                redundancy = [sentences_dict[k] for k in sentence_ids
+                              if (1 - cosine(new_vector, sentences_dict[k]) > self.redundancy_threshold)]
 
-            if summary_char_num > char_limit:
-                stop = True
+                if not redundancy:
+                    summary_char_num += sent_char_num
+                    sentence_ids.append(sentence_id)
+                i += 1
+
+                if summary_char_num > limit:
+                    stop = True
+        else:
+            sentences_number = summary_length
+            sentence_ids = rank[:sentences_number]
+            sentence_ids = map(lambda t: t[0], sentence_ids)
 
         sentence_ids = sorted(sentence_ids)
         result_list = map(lambda sent_id: self.sentence_retriever[sent_id], sentence_ids)
@@ -144,3 +160,24 @@ class Summarizer:
         summary = " ".join(result_list)
         # return summary[:char_limit]
         return summary
+
+    @staticmethod
+    def _check_params(redundancy, tfidf, summary_length):
+        error_msg = ""
+
+        try:
+            assert 0 <= redundancy <= 1
+        except AssertionError:
+            error_msg += "ERRORE: la soglia sulla ridondanza inserita non è valida\n"
+
+        try:
+            assert 0 <= tfidf <= 1
+        except AssertionError:
+            error_msg += "ERRORE: la soglia sul tfidf inserita non è valida\n"
+
+        try:
+            assert  0 <= summary_length
+        except AssertionError:
+            error_msg += "ERRORE: l'indicazione sulla lunghezza del riassunto non è corretta\n"
+
+        return error_msg
