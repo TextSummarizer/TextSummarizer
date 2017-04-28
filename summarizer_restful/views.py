@@ -4,18 +4,20 @@ from rest_framework.response import Response
 
 import summarizer
 
-s = summarizer.Summarizer(model_path="C:/enwiki_20161220_skip_300.bin")
+s = summarizer.Summarizer(
+    model_path="C:/Users/Gianni Mastroscianni/Desktop/Magistrale/Accesso Intelligente all'Informazione ed Elaborazione del Linguaggio Naturale/Progetto/word2vec_models/enwiki_20161220_skip_300.bin")
 
 
-class Summary(generics.GenericAPIView, mixins.RetrieveModelMixin):
-    def get(self, request):
-        text = str(request.query_params.get('text'))
-        redundancy_threshold = float(request.query_params.get('redundancy_threshold'))
-        tfidf = float(request.query_params.get('tfidf'))
-        summary_length = int(request.query_params.get('summary_length'))
+class Summary(generics.GenericAPIView, mixins.CreateModelMixin):
+    def post(self, request):
+        text = str(request.POST.get('text'))
+        redundancy_threshold = float(request.POST.get('redundancy_threshold'))
+        tfidf = float(request.POST.get('tfidf_threshold'))
+        summary_length = int(request.POST.get('summary_length')) #qui ho lasciato int
+        query_based_token = str(request.POST.get('query_based_token'))
 
         s.set_tfidf_threshold(tfidf)
         s.set_redundancy_threshold(redundancy_threshold)
-        summary = s.summarize(text, summary_length)
-
-        return Response(summary)
+        summary = s.summarize(text, summary_length, query_based_token)
+        to_return = {'summary': summary}
+        return Response(to_return)
