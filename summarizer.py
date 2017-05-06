@@ -11,7 +11,9 @@ class Summarizer:
                  remove_stopwords=False,
                  tfidf_threshold=0.2,
                  regex=True,
-                 redundancy_threshold=0.95):
+                 redundancy_threshold=0.95,
+                 num_topics_lda=4,
+                 num_words_lda=9):
         self.lookup_table = lookup_table.LookupTable(model_path)
         self.stemming = stemming
         self.remove_stopwords = remove_stopwords
@@ -19,6 +21,8 @@ class Summarizer:
         self.regex = regex
         self.sentence_retriever = []  # populated in _preprocessing method
         self.redundancy_threshold = redundancy_threshold
+        self.num_topics_lda = num_topics_lda
+        self.num_words_lda = num_words_lda
 
     def set_tfidf_threshold(self, value):
         self.tfidf_threshold = value
@@ -26,48 +30,108 @@ class Summarizer:
     def set_redundancy_threshold(self, value):
         self.redundancy_threshold = value
 
-    def summarize(self, text, summary_length, query_based_token):
+    def summarize(self, text, summary_length, query_based_token, centroid_mode="tfidf"):
         error_msg = self._check_params(self.redundancy_threshold, self.tfidf_threshold, summary_length)
-        if not error_msg == "":
-            return "==error==\n" + error_msg
-        else:
-            sentences = self._preprocessing(text, self.regex)
-            centroid = self._gen_centroid_tfidf(sentences) \
-                if not query_based_token \
-                else self._gen_centroid_query_based(query_based_token)
-            sentences_dict = self._sentence_vectorizer(sentences)
-            summary = self._sentence_selection(centroid, sentences_dict, summary_length)
-            return summary
+        if error_msg != "":
+            return "", error_msg, True
+        if query_based_token:
+            centroid_mode = CentroidMode.QUERY_BASED
 
-    def _preprocessing(self, input_path, regex):
+        # Sentences generation (with preprocessing) + centroid generation (based on centroid_mode choice)
+        if centroid_mode == CentroidMode.QUERY_BASED:
+            sentences = self._preprocessing(text, self.regex, centroid_mode)
+            centroid = self._gen_centroid_query_based(query_based_token)
+
+        elif centroid_mode == CentroidMode.TFIDF:
+            sentences = self._preprocessing(text, self.regex, centroid_mode)
+            centroid = self._gen_centroid_tfidf(sentences)
+
+        elif centroid_mode == CentroidMode.LDA:
+            sentences = self._preprocessing(text, self.regex, centroid_mode)
+            sentences_split = [sentence.split(" ") for sentence in sentences]
+            sentences_for_centroid = []
+            for sentence in sentences_split:
+                sentences_for_centroid.append(filter(lambda word: word != '', sentence))
+            centroid = self._gen_centroid_lda(sentences_for_centroid, self.num_topics_lda, self.num_words_lda)
+
+        else:
+            error_msg += ErrorMessage.INVALID_CENTROID_MODE
+            return "", error_msg, True
+
+        # Sentence vectorization + sentence selection
+        sentences_dict = self._sentence_vectorizer(sentences)
+        summary = self._sentence_selection(centroid, sentences_dict, summary_length)
+
+        return summary, error_msg, False
+
+    def _preprocessing(self, input_path, regex, centroid_mode):
+        if centroid_mode == CentroidMode.LDA:
+            self.remove_stopwords = True
+            self.stemming = True
+
         # Get splitted sentences
-        data = d.get_data(input_path)
+        sentences = d.get_data(input_path)
 
         # Add points at the end of the sentence
-        data = d.add_points(data)
+        sentences = d.add_points(sentences)
 
         # Store the sentence before process them. We need them to build final summary
-        self.sentence_retriever = data
+        self.sentence_retriever = sentences
 
         # Remove punctuation
         if regex:
-            data = d.remove_punctuation_regex(data)
+            sentences = d.remove_punctuation_regex(sentences)
         else:
-            data = d.remove_punctuation_nltk(data)
+            sentences = d.remove_punctuation_nltk(sentences)
 
         # Gets the stem of every word if requested
         if self.stemming:
-            data = d.stemming(data)
+            sentences = d.stemming(sentences)
 
         # Remove stopwords if requested
         if self.remove_stopwords:
-            data = d.remove_stopwords(data)
+            sentences = d.remove_stopwords(sentences)
 
-        return data
+        return sentences
+
+    def _gen_centroid_lda(self, sentences, num_topics, num_words):
+        from gensim import models, corpora
+
+        # Find topic and probability distribution for each topic (with LDA)
+        dictionary = corpora.Dictionary(sentences)  # Usage: remember (id -> term) mapping
+        corpus = [dictionary.doc2bow(text) for text in sentences]  # build matrix (corpus is the matrix)
+        lda_model = models.ldamodel.LdaModel(corpus, num_topics=num_topics, id2word=dictionary)
+        show_topics = lda_model.show_topics()
+
+        # For each topic, I want to get only "num_words" term (the most relevant, based on probability distribution)
+        # Selected token will be part of my "centroid_set"
+        # Warning: I have to filter out relevant words that are not in w2v model
+        centroid_set = []
+        for topic in show_topics:
+            token_probability_records = topic[1].split(" + ")
+            i = 0
+            topic_word_counter = 0
+            stop = False
+
+            while i < len(token_probability_records) and not stop:
+                # String manipulation (probability distribution is in string format)
+                next_record = token_probability_records[i]
+                split_record = next_record.split("*")
+                token = split_record[1].replace("\"", "")  # (split_record[0] is probability of the token)
+
+                if token not in centroid_set:
+                    if not self.lookup_table.unseen(token):
+                        centroid_set.append(token)
+                        topic_word_counter += 1
+                        if topic_word_counter == num_words:
+                            stop = True
+                i += 1
+
+        top_words_vectorized = map(lambda word: self.lookup_table.vec(word), centroid_set)
+        return sum(top_words_vectorized) / len(top_words_vectorized)
 
     def _gen_centroid_tfidf(self, sentences):
         from sklearn.feature_extraction.text import TfidfVectorizer
-        import numpy as np
 
         # Get relevant terms
         tf = TfidfVectorizer()
@@ -107,17 +171,12 @@ class Summarizer:
 
     def _sentence_selection(self, centroid, sentences_dict, summary_length):
         from scipy.spatial.distance import cosine
-        import math
 
         # Generate ranked record (sentence_id - vector - sim_with_centroid)
         record = []
         for sentence_id in sentences_dict:
             vector = sentences_dict[sentence_id]
-            sentence_length = len(self.sentence_retriever[sentence_id])
-            centroid_similarity = (1 - cosine(centroid, vector))
-            num = math.pow(centroid_similarity, 2)
-            den = math.log(sentence_length)
-            similarity = num / den
+            similarity = (1 - cosine(centroid, vector))
             record.append((sentence_id, vector, similarity))
 
         rank = list(reversed(sorted(record, key=lambda tup: tup[2])))
@@ -131,7 +190,7 @@ class Summarizer:
         # Switch summarization mode: percentage VS number of sentences
         text_length = sum([len(x) for x in self.sentence_retriever])
 
-        if summary_length <= 1:
+        if summary_length <= 1:                                     # Base summary length on percentage
             limit = int(text_length * summary_length)
 
             while not stop and i < len(rank):
@@ -148,7 +207,7 @@ class Summarizer:
 
                 if summary_char_num > limit:
                     stop = True
-        else:
+        else:                                                       # Base summary length on number of sentences
             sentences_number = summary_length
             sentence_ids = rank[:sentences_number]
             sentence_ids = map(lambda t: t[0], sentence_ids)
@@ -158,7 +217,6 @@ class Summarizer:
 
         # Format output
         summary = " ".join(result_list)
-        # return summary[:char_limit]
         return summary
 
     @staticmethod
@@ -168,16 +226,35 @@ class Summarizer:
         try:
             assert 0 <= redundancy <= 1
         except AssertionError:
-            error_msg += "ERRORE: la soglia sulla ridondanza inserita non è valida\n"
+            error_msg += ErrorMessage.INVALID_REDUNDANCY
 
         try:
             assert 0 <= tfidf <= 1
         except AssertionError:
-            error_msg += "ERRORE: la soglia sul tfidf inserita non è valida\n"
+            error_msg += ErrorMessage.INVALID_TFIDF
 
         try:
-            assert  0 <= summary_length
+            assert 0 <= summary_length
         except AssertionError:
-            error_msg += "ERRORE: l'indicazione sulla lunghezza del riassunto non è corretta\n"
+            error_msg += ErrorMessage.INVALID_LENGTH
 
         return error_msg
+
+
+class CentroidMode:
+    def __init__(self):
+        pass
+
+    QUERY_BASED = "query_based"
+    TFIDF = "tfidf"
+    LDA = "lda"
+
+
+class ErrorMessage:
+    def __init__(self):
+        pass
+
+    INVALID_CENTROID_MODE = "Centroid_mode non è avvalorato correttamente. Valori accettati: (lda - tfidf - query_based)"
+    INVALID_REDUNDANCY = "ERRORE: la soglia sulla ridondanza inserita non è valida\n"
+    INVALID_TFIDF = "ERRORE: la soglia sul tfidf inserita non è valida\n"
+    INVALID_LENGTH = "ERRORE: l'indicazione sulla lunghezza del riassunto non è corretta\n"
