@@ -13,11 +13,15 @@ class Summary(generics.GenericAPIView, mixins.CreateModelMixin):
         text = str(request.POST.get('text'))
         redundancy_threshold = float(request.POST.get('redundancy_threshold'))
         tfidf = float(request.POST.get('tfidf_threshold'))
-        summary_length = int(request.POST.get('summary_length')) #qui ho lasciato int
-        query_based_token = str(request.POST.get('query_based_token'))
+        summary_length = float(request.POST.get('summary_length'))  # che casting?
+
+        if summary_length >= 1:
+            summary_length = int(summary_length)
+
+        query_based_token = request.POST.get('query_based_token')  # controlli
 
         s.set_tfidf_threshold(tfidf)
         s.set_redundancy_threshold(redundancy_threshold)
-        summary = s.summarize(text, summary_length, query_based_token)
-        to_return = {'summary': summary}
+        summary, error_msg, boolean = s.summarize(text, summary_length, query_based_token)
+        to_return = {'summary': summary, 'error': error_msg, 'query_token_error': boolean}
         return Response(to_return)
