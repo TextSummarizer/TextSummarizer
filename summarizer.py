@@ -12,8 +12,9 @@ class Summarizer:
                  tfidf_threshold=0.2,
                  regex=True,
                  redundancy_threshold=0.95,
+                 centroid_mode="tfidf",
                  num_topics_lda=4,
-                 num_words_lda=9):
+                 num_words_lda=5):
         self.lookup_table = lookup_table.LookupTable(model_path)
         self.stemming = stemming
         self.remove_stopwords = remove_stopwords
@@ -21,6 +22,7 @@ class Summarizer:
         self.regex = regex
         self.sentence_retriever = []  # populated in _preprocessing method
         self.redundancy_threshold = redundancy_threshold
+        self.centroid_mode = centroid_mode
         self.num_topics_lda = num_topics_lda
         self.num_words_lda = num_words_lda
 
@@ -30,24 +32,23 @@ class Summarizer:
     def set_redundancy_threshold(self, value):
         self.redundancy_threshold = value
 
-    def summarize(self, text, summary_length, query_based_token, centroid_mode="tfidf"):
+    def summarize(self, text, summary_length, query_based_token):
         error_msg = self._check_params(self.redundancy_threshold, self.tfidf_threshold, summary_length)
         if error_msg != "":
             return "", error_msg, True
         if query_based_token:
-            centroid_mode = CentroidMode.QUERY_BASED
+            self.centroid_mode = CentroidMode.QUERY_BASED
 
         # Sentences generation (with preprocessing) + centroid generation (based on centroid_mode choice)
-        if centroid_mode == CentroidMode.QUERY_BASED:
-            sentences = self._preprocessing(text, self.regex, centroid_mode)
+        sentences = self._preprocessing(text, self.regex, self.centroid_mode)
+
+        if self.centroid_mode == CentroidMode.QUERY_BASED:
             centroid = self._gen_centroid_query_based(query_based_token)
 
-        elif centroid_mode == CentroidMode.TFIDF:
-            sentences = self._preprocessing(text, self.regex, centroid_mode)
+        elif self.centroid_mode == CentroidMode.TFIDF:
             centroid = self._gen_centroid_tfidf(sentences)
 
-        elif centroid_mode == CentroidMode.LDA:
-            sentences = self._preprocessing(text, self.regex, centroid_mode)
+        elif self.centroid_mode == CentroidMode.LDA:
             sentences_split = [sentence.split(" ") for sentence in sentences]
             sentences_for_centroid = []
             for sentence in sentences_split:
