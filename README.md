@@ -1,5 +1,7 @@
-# Text Summarizer
-Implementation based on paper "Centroid-based Text Summarization through Compositionality of Word Embeddings" accepted at MultiLing Workshop in EACL 2017
+## Python Framework for Extractive Text Summarization
+Natural Language Processing project for Master's Degree in Computer Science (Machine Learning curriculum) @ [University of Bari](http://www.uniba.it/ricerca/dipartimenti/informatica).
+Implementation based on paper "Centroid-based Text Summarization through Compositionality of Word Embeddings" accepted at MultiLing 
+Workshop in EACL 2017
 
 ### Params description
 * `text`: string to summarize
