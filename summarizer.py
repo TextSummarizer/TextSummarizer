@@ -32,10 +32,15 @@ class Summarizer:
     def set_redundancy_threshold(self, value):
         self.redundancy_threshold = value
 
-    def summarize(self, text, summary_length, query_based_token):
+    def summarize(self, text, summary_length, query_based_token=None):
+        if query_based_token is None:
+            query_based_token = []
         error_msg = self._check_params(self.redundancy_threshold, self.tfidf_threshold, summary_length)
+        error_flag = False
+
         if error_msg != "":
             return "", error_msg, True
+
         if query_based_token:
             self.centroid_mode = CentroidMode.QUERY_BASED
 
@@ -43,7 +48,11 @@ class Summarizer:
         sentences = self._preprocessing(text, self.regex, self.centroid_mode)
 
         if self.centroid_mode == CentroidMode.QUERY_BASED:
-            centroid = self._gen_centroid_query_based(query_based_token)
+            centroid, error_msg = self._gen_centroid_query_based(query_based_token)
+            if centroid is None:
+                return "", error_msg, True
+            elif error_msg is not "":
+                error_flag = True
 
         elif self.centroid_mode == CentroidMode.TFIDF:
             centroid = self._gen_centroid_tfidf(sentences)
@@ -63,7 +72,7 @@ class Summarizer:
         sentences_dict = self._sentence_vectorizer(sentences)
         summary = self._sentence_selection(centroid, sentences_dict, summary_length)
 
-        return summary, error_msg, False
+        return summary, error_msg, error_flag
 
     def _preprocessing(self, input_path, regex, centroid_mode):
         if centroid_mode == CentroidMode.LDA:
@@ -150,8 +159,18 @@ class Summarizer:
         return sum(res) / len(res)
 
     def _gen_centroid_query_based(self, query_based_token):
-        res = [self.lookup_table.vec(term) for term in query_based_token]
-        return sum(res) / len(res)
+        seen_token = [token for token in query_based_token if not self.lookup_table.unseen(token)]
+        unseen_token = [token for token in query_based_token if self.lookup_table.unseen(token)]
+
+        if not seen_token:
+            return None, ErrorMessage.generate_query_based_error()
+
+        warning_msg = ""
+        if unseen_token:
+            warning_msg = ErrorMessage.generate_query_based_warning(unseen_token, seen_token)
+        res = [self.lookup_table.vec(term) for term in seen_token]
+        centroid = sum(res) / len(res)
+        return centroid, warning_msg
 
     def _sentence_vectorizer(self, sentences):
         dic = {}
@@ -191,7 +210,7 @@ class Summarizer:
         # Switch summarization mode: percentage VS number of sentences
         text_length = sum([len(x) for x in self.sentence_retriever])
 
-        if summary_length <= 1:                                     # Base summary length on percentage
+        if summary_length < 1:                                     # Base summary length on percentage
             limit = int(text_length * summary_length)
 
             while not stop and i < len(rank):
@@ -259,3 +278,12 @@ class ErrorMessage:
     INVALID_REDUNDANCY = "ERRORE: la soglia sulla ridondanza inserita non è valida\n"
     INVALID_TFIDF = "ERRORE: la soglia sul tfidf inserita non è valida\n"
     INVALID_LENGTH = "ERRORE: l'indicazione sulla lunghezza del riassunto non è corretta\n"
+
+    @staticmethod
+    def generate_query_based_warning(unseen_token, seen_token):
+        return "Non è stato possibile utilizzare i termini: " + ", ".join(unseen_token) + "\n" + \
+                    "Il riassunto è stato comunque generato utilizzando i termini: " + ", ".join(seen_token)
+
+    @staticmethod
+    def generate_query_based_error():
+        return "ERRORE: nessuno dei termini inseriti è valido, impossibile generare il riassunto"
