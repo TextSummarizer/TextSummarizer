@@ -1,7 +1,6 @@
 from nltk.corpus import stopwords
 from nltk.tokenize import TreebankWordTokenizer
 import Stemmer
-import io
 import re
 
 
@@ -71,21 +70,6 @@ def get_data(file):
     return to_return
 
 
-def remove_doc(text):
-    to_return = []
-    for sentence in text:
-        if not sentence.startswith("doc"):
-            to_return.append(sentence)
-    return to_return
-
-
-def _file_len(fname):
-    with open(fname) as f:
-        for i, l in enumerate(f):
-            pass
-    return i + 1
-
-
 def add_points(data):
     to_return = []
     for sentence in data:
@@ -95,21 +79,6 @@ def add_points(data):
             sentence += "."
         to_return.append(sentence)
     return to_return
-
-
-def print_data(data):
-    for row in data:
-        print row
-
-
-def write_on(data, out):
-    out = open(out, "w")
-    for row in data:
-        line = ""
-        for i in row:
-            line += i
-        out.write(line)
-    out.close()
 
 
 def export_summary(output_dir_path, filename, text):
