@@ -77,12 +77,7 @@ class Summarizer:
     def _preprocessing(self, text, regex, centroid_mode):
         import unidecode
 
-        # text_utf = unicode(text, 'utf8')
-        # text_ascii = unidecode.unidecode(text)
-        try:
-            text_utf = unicode(text, 'utf8')
-        except TypeError:
-            text_utf = unicode(text.encode('utf-8'), 'utf-8')
+        text_utf = unicode(text, 'utf8')
         text_ascii = unidecode.unidecode(text_utf)
 
         if centroid_mode == CentroidMode.LDA:
