@@ -57,9 +57,9 @@ def remove_stopwords(data):
     return to_return
 
 
-def get_data(file):
+def get_data(text):
     to_return = []
-    sentences = file.split(". ")
+    sentences = text.split(". ")
     for sentence in sentences:
         if sentence != "\n" and sentence != '':
             if sentence.startswith(" "):

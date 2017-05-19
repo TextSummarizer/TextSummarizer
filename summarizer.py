@@ -74,19 +74,31 @@ class Summarizer:
 
         return summary, error_msg, error_flag
 
-    def _preprocessing(self, input_path, regex, centroid_mode):
+    def _preprocessing(self, text, regex, centroid_mode):
+        import unidecode
+
+        # text_utf = unicode(text, 'utf8')
+        # text_ascii = unidecode.unidecode(text)
+        try:
+            text_utf = unicode(text, 'utf8')
+        except TypeError:
+            text_utf = unicode(text.encode('utf-8'), 'utf-8')
+        text_ascii = unidecode.unidecode(text_utf)
+
         if centroid_mode == CentroidMode.LDA:
             self.remove_stopwords = True
             self.stemming = True
 
         # Get splitted sentences
-        sentences = d.get_data(input_path)
+        sentences = d.get_data(text_ascii)
+        sentences_original = d.get_data(text)  # We need them in sentence retriever
 
         # Add points at the end of the sentence
         sentences = d.add_points(sentences)
+        sentences_original = d.add_points(sentences_original) # We need them in sentence retriever
 
         # Store the sentence before process them. We need them to build final summary
-        self.sentence_retriever = sentences
+        self.sentence_retriever = sentences_original
 
         # Remove punctuation
         if regex:
@@ -101,6 +113,11 @@ class Summarizer:
         # Remove stopwords if requested
         if self.remove_stopwords:
             sentences = d.remove_stopwords(sentences)
+
+        # sent = sentences[1]
+        # sentences_ascii = [unidecode.unidecode(sentence) for sentence in sentences]
+        # prova = sentences_ascii[1]
+        # print prova
 
         return sentences
 
