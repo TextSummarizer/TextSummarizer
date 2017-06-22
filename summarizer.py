@@ -75,22 +75,22 @@ class Summarizer:
         return summary, error_msg, error_flag
 
     def _preprocessing(self, text, regex, centroid_mode):
-        import unidecode
+        # import unidecode
 
-        text_utf = unicode(text, 'utf8')
-        text_ascii = unidecode.unidecode(text_utf)
+        # text_utf = unicode(text, 'utf8')
+        # text_ascii = unidecode.unidecode(text_utf)
 
         if centroid_mode == CentroidMode.LDA:
             self.remove_stopwords = True
             self.stemming = True
 
         # Get splitted sentences
-        sentences = d.get_data(text_ascii)
+        sentences = d.get_data(text)
         sentences_original = d.get_data(text)  # We need them in sentence retriever
 
         # Add points at the end of the sentence
         sentences = d.add_points(sentences)
-        sentences_original = d.add_points(sentences_original) # We need them in sentence retriever
+        sentences_original = d.add_points(sentences_original)  # We need them in sentence retriever
 
         # Store the sentence before process them. We need them to build final summary
         self.sentence_retriever = sentences_original
@@ -204,6 +204,8 @@ class Summarizer:
     def _sentence_selection(self, centroid, sentences_dict, summary_length):
         from scipy.spatial.distance import cosine
 
+        summary_length = int(summary_length)
+
         # Generate ranked record (sentence_id - vector - sim_with_centroid)
         record = []
         for sentence_id in sentences_dict:
@@ -222,7 +224,7 @@ class Summarizer:
         # Switch summarization mode: percentage VS number of sentences
         text_length = sum([len(x) for x in self.sentence_retriever])
 
-        if summary_length < 1:                                     # Base summary length on percentage
+        if summary_length < 1:  # Base summary length on percentage
             limit = int(text_length * summary_length)
 
             while not stop and i < len(rank):
@@ -239,7 +241,7 @@ class Summarizer:
 
                 if summary_char_num > limit:
                     stop = True
-        else:                                                       # Base summary length on number of sentences
+        else:  # Base summary length on number of sentences
             sentences_number = summary_length
             sentence_ids = rank[:sentences_number]
             sentence_ids = map(lambda t: t[0], sentence_ids)
@@ -294,7 +296,7 @@ class ErrorMessage:
     @staticmethod
     def generate_query_based_warning(unseen_token, seen_token):
         return "Non è stato possibile utilizzare i termini: " + ", ".join(unseen_token) + "\n" + \
-                    "Il riassunto è stato comunque generato utilizzando i termini: " + ", ".join(seen_token)
+               "Il riassunto è stato comunque generato utilizzando i termini: " + ", ".join(seen_token)
 
     @staticmethod
     def generate_query_based_error():

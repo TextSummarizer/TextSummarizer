@@ -8,7 +8,8 @@ from django.http import JsonResponse
 import summarizer
 
 s = summarizer.Summarizer(
-    model_path="itwiki_20161220_skip_300.bin")
+    model_path="C:/Users/Gianni Mastroscianni/Desktop/Magistrale/Accesso Intelligente all'Informazione ed Elaborazione del Linguaggio Naturale/Progetto/word2vec_models/enwiki_20161220_skip_300.bin")
+
 
 
 class Summary(generics.GenericAPIView, mixins.CreateModelMixin):
@@ -31,5 +32,4 @@ class Summary(generics.GenericAPIView, mixins.CreateModelMixin):
             summary, error_msg, boolean = s.summarize(text, summary_length, query_based_token)
             to_return = {'id': name, 'summary': summary, 'error': error_msg, 'query_token_error': boolean}
             list.append(to_return)
-
-        print JsonResponse(list)
+        return JsonResponse(list, safe=False)
