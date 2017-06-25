@@ -12,9 +12,10 @@ class Summarizer:
                  tfidf_threshold=0.2,
                  regex=True,
                  redundancy_threshold=0.95,
-                 centroid_mode="tfidf",
+                 default_centroid_mode="tfidf",
                  num_topics_lda=4,
-                 num_words_lda=5):
+                 num_words_lda=5,
+                 language="italian"):
         self.lookup_table = lookup_table.LookupTable(model_path)
         self.stemming = stemming
         self.remove_stopwords = remove_stopwords
@@ -22,9 +23,10 @@ class Summarizer:
         self.regex = regex
         self.sentence_retriever = []  # populated in _preprocessing method
         self.redundancy_threshold = redundancy_threshold
-        self.centroid_mode = centroid_mode
+        self.default_centroid_mode = default_centroid_mode
         self.num_topics_lda = num_topics_lda
         self.num_words_lda = num_words_lda
+        self.language = language
 
     def set_tfidf_threshold(self, value):
         self.tfidf_threshold = value
@@ -32,9 +34,7 @@ class Summarizer:
     def set_redundancy_threshold(self, value):
         self.redundancy_threshold = value
 
-    def summarize(self, text, summary_length, query_based_token=None):
-        if query_based_token is None:
-            query_based_token = []
+    def summarize(self, text, summary_length, query_based_token):
         error_msg = self._check_params(self.redundancy_threshold, self.tfidf_threshold, summary_length)
         error_flag = False
 
@@ -42,22 +42,26 @@ class Summarizer:
             return "", error_msg, True
 
         if query_based_token:
-            self.centroid_mode = CentroidMode.QUERY_BASED
+            centroid_mode = CentroidMode.QUERY_BASED
+        else:
+            centroid_mode = self.default_centroid_mode
 
         # Sentences generation (with preprocessing) + centroid generation (based on centroid_mode choice)
-        sentences = self._preprocessing(text, self.regex, self.centroid_mode)
+        sentences = self._preprocessing(text, self.regex, centroid_mode)
 
-        if self.centroid_mode == CentroidMode.QUERY_BASED:
+        print "CENTROIDE MODE:", str(centroid_mode)
+
+        if centroid_mode == CentroidMode.QUERY_BASED:
             centroid, error_msg = self._gen_centroid_query_based(query_based_token)
             if centroid is None:
                 return "", error_msg, True
             elif error_msg is not "":
                 error_flag = True
 
-        elif self.centroid_mode == CentroidMode.TFIDF:
+        elif centroid_mode == CentroidMode.TFIDF:
             centroid = self._gen_centroid_tfidf(sentences)
 
-        elif self.centroid_mode == CentroidMode.LDA:
+        elif centroid_mode == CentroidMode.LDA:
             sentences_split = [sentence.split(" ") for sentence in sentences]
             sentences_for_centroid = []
             for sentence in sentences_split:
@@ -85,12 +89,12 @@ class Summarizer:
             self.stemming = True
 
         # Get splitted sentences
-        sentences = d.get_data(text)
-        sentences_original = d.get_data(text)  # We need them in sentence retriever
+        sentences = d.get_data(text, self.language)
+        sentences_original = d.get_data(text, self.language)  # We need them in sentence retriever
 
         # Add points at the end of the sentence
-        sentences = d.add_points(sentences)
-        sentences_original = d.add_points(sentences_original)  # We need them in sentence retriever
+        # sentences = d.add_points(sentences)
+        # sentences_original = d.add_points(sentences_original)  # We need them in sentence retriever
 
         # Store the sentence before process them. We need them to build final summary
         self.sentence_retriever = sentences_original
@@ -171,6 +175,7 @@ class Summarizer:
         return sum(res) / len(res)
 
     def _gen_centroid_query_based(self, query_based_token):
+        query_based_token = query_based_token.lower()
         seen_token = [token for token in query_based_token if not self.lookup_table.unseen(token)]
         unseen_token = [token for token in query_based_token if self.lookup_table.unseen(token)]
 
@@ -189,7 +194,7 @@ class Summarizer:
         for i in range(len(sentences)):
 
             # Generate an array of zeros
-            sum_vec = np.zeros(self.lookup_table.model.layer1_size)
+            sum_vec = np.zeros(self.lookup_table.model.vector_size)
             sentence = [word for word in sentences[i].split(" ") if not self.lookup_table.unseen(word)]
 
             # Sums all the word's vec to create the sentence vec if sentence is not empty
@@ -204,7 +209,7 @@ class Summarizer:
     def _sentence_selection(self, centroid, sentences_dict, summary_length):
         from scipy.spatial.distance import cosine
 
-        summary_length = int(summary_length)
+        #summary_length = int(summary_length)
 
         # Generate ranked record (sentence_id - vector - sim_with_centroid)
         record = []
@@ -225,7 +230,8 @@ class Summarizer:
         text_length = sum([len(x) for x in self.sentence_retriever])
 
         if summary_length < 1:  # Base summary length on percentage
-            limit = int(text_length * summary_length)
+            #limit = int(text_length * summary_length)
+            limit = int(text_length * float(summary_length))
 
             while not stop and i < len(rank):
                 sentence_id = rank[i][0]
@@ -242,7 +248,7 @@ class Summarizer:
                 if summary_char_num > limit:
                     stop = True
         else:  # Base summary length on number of sentences
-            sentences_number = summary_length
+            sentences_number = int(summary_length)
             sentence_ids = rank[:sentences_number]
             sentence_ids = map(lambda t: t[0], sentence_ids)
 

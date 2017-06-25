@@ -57,17 +57,12 @@ def remove_stopwords(data):
     return to_return
 
 
-def get_data(text):
-    to_return = []
-    sentences = text.split(". ")
-    for sentence in sentences:
-        if sentence != "\n" and sentence != '':
-            if sentence.startswith(" "):
-                sentence.replace(" ", "")
-            if sentence.endswith("\n"):
-                sentence = sentence.replace("\n", "")
-            to_return.append(sentence)
-    return to_return
+# splitta solo le frasi e le pulisce
+def get_data(text, language):
+    from nltk.tokenize import sent_tokenize
+    sentences = sent_tokenize(text, language)
+    fixed_sentences = [_fix_sentence(s) for s in sentences]
+    return fixed_sentences
 
 
 def add_points(data):
@@ -90,3 +85,11 @@ def export_summary(output_dir_path, filename, text):
     out = open(output_dir_path + '/' + filename, "w")
     out.write(text.encode('utf-8'))
     out.close()
+
+
+def _fix_sentence(sentence):
+    sentence = unicode.replace(sentence, "\n", " ")
+    words = sentence.split(" ")
+    remove_black_spaces = [w for w in words if w != '']
+    fixed_sentence = " ".join(remove_black_spaces)
+    return fixed_sentence
