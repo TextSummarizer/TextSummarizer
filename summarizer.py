@@ -175,7 +175,7 @@ class Summarizer:
         return sum(res) / len(res)
 
     def _gen_centroid_query_based(self, query_based_token):
-        query_based_token = query_based_token.lower()
+        query_based_token = [token.lower() for token in query_based_token]
         seen_token = [token for token in query_based_token if not self.lookup_table.unseen(token)]
         unseen_token = [token for token in query_based_token if self.lookup_table.unseen(token)]
 
@@ -294,16 +294,16 @@ class ErrorMessage:
     def __init__(self):
         pass
 
-    INVALID_CENTROID_MODE = "Centroid_mode non è avvalorato correttamente. Valori accettati: (lda - tfidf - query_based)"
-    INVALID_REDUNDANCY = "ERRORE: la soglia sulla ridondanza inserita non è valida\n"
-    INVALID_TFIDF = "ERRORE: la soglia sul tfidf inserita non è valida\n"
-    INVALID_LENGTH = "ERRORE: l'indicazione sulla lunghezza del riassunto non è corretta\n"
+    INVALID_CENTROID_MODE = u"Centroid_mode non è avvalorato correttamente. Valori accettati: (lda - tfidf - query_based)"
+    INVALID_REDUNDANCY = u"ERRORE: la soglia sulla ridondanza inserita non è valida\n"
+    INVALID_TFIDF = u"ERRORE: la soglia sul tfidf inserita non è valida\n"
+    INVALID_LENGTH = u"ERRORE: l'indicazione sulla lunghezza del riassunto non è corretta\n"
 
     @staticmethod
     def generate_query_based_warning(unseen_token, seen_token):
-        return "Non è stato possibile utilizzare i termini: " + ", ".join(unseen_token) + "\n" + \
-               "Il riassunto è stato comunque generato utilizzando i termini: " + ", ".join(seen_token)
+        return u"Non è stato possibile utilizzare i termini: " + ", ".join(unseen_token) + "\n" + \
+               u"Il riassunto è stato comunque generato utilizzando i termini: " + ", ".join(seen_token)
 
     @staticmethod
     def generate_query_based_error():
-        return "ERRORE: nessuno dei termini inseriti è valido, impossibile generare il riassunto"
+        return u"ERRORE: nessuno dei termini inseriti è valido, impossibile generare il riassunto"
